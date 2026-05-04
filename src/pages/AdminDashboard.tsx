@@ -11,6 +11,7 @@ const ADMIN_EMAIL = 'sagacitas.sistemas@gmail.com';
 export default function AdminDashboard() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [user, setUser] = useState(auth.currentUser);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -42,6 +43,7 @@ export default function AdminDashboard() {
 
   const handleDelete = async (id: string) => {
     if (!id) return;
+    setIsDeleting(true);
     try {
       await recipeService.deleteRecipe(id);
       setRecipes(prev => prev.filter(r => r.id !== id));
@@ -49,6 +51,8 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error('Error deleting recipe:', error);
       alert('Erro ao excluir a receita.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -199,15 +203,23 @@ export default function AdminDashboard() {
               <div className="flex gap-4">
                 <button 
                   onClick={() => setDeletingId(null)}
-                  className="flex-1 py-4 font-bold text-on-surface-variant hover:bg-stone-50 rounded-2xl transition-colors"
+                  disabled={isDeleting}
+                  className="flex-1 py-4 font-bold text-on-surface-variant hover:bg-stone-50 rounded-2xl transition-colors disabled:opacity-50"
                 >
                   Manter
                 </button>
                 <button 
                   onClick={() => deletingId && handleDelete(deletingId)}
-                  className="flex-2 py-4 px-6 rounded-2xl font-bold bg-red-500 text-white hover:bg-red-600 shadow-lg shadow-red-200 transition-all active:scale-[0.98]"
+                  disabled={isDeleting}
+                  className="flex-2 py-4 px-6 rounded-2xl font-bold bg-red-500 text-white hover:bg-red-600 shadow-lg shadow-red-200 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  Confirmar Exclusão
+                  {isDeleting ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" /> Excluindo...
+                    </>
+                  ) : (
+                    'Confirmar Exclusão'
+                  )}
                 </button>
               </div>
             </motion.div>

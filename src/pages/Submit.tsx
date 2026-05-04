@@ -2,7 +2,7 @@ import { motion } from 'motion/react';
 import { Upload, Plus, Trash2, Loader2, Play } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { recipeService, Recipe } from '../services/recipeService';
+import { recipeService, Recipe, Ingredient } from '../services/recipeService';
 import { auth } from '../lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
@@ -24,16 +24,13 @@ export default function Submit() {
     time: '',
     servings: '',
     difficulty: 'Médio',
-    ingredients: [''],
+    ingredients: [{ name: '', quantity: '' }],
     instructions: [''],
   });
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (u) => {
       setUser(u);
-      if (!u) {
-        // Optional: Redirect to home or show login message if user is not logged in
-      }
     });
 
     if (isEditing) {
@@ -41,7 +38,13 @@ export default function Submit() {
     } else if (location.state?.scrapedData) {
       setFormData(prev => ({
         ...prev,
-        ...location.state.scrapedData
+        ...location.state.scrapedData,
+        // Ensure ingredients are in the correct format if they came as strings or mismatch
+        ingredients: Array.isArray(location.state.scrapedData.ingredients) 
+          ? location.state.scrapedData.ingredients.map((ing: any) => 
+              typeof ing === 'string' ? { name: ing, quantity: '' } : ing
+            )
+          : [{ name: '', quantity: '' }]
       }));
     }
 
@@ -52,7 +55,6 @@ export default function Submit() {
     try {
       const recipe = await recipeService.getRecipe(recipeId);
       if (recipe) {
-        // Security check: only owner can edit
         if (auth.currentUser && recipe.ownerId !== auth.currentUser.uid) {
           alert('You do not have permission to edit this recipe.');
           navigate('/explore');
@@ -66,7 +68,9 @@ export default function Submit() {
           time: recipe.time || '',
           servings: recipe.servings || '',
           difficulty: recipe.difficulty || 'Médio',
-          ingredients: recipe.ingredients,
+          ingredients: recipe.ingredients.map(ing => 
+            typeof ing === 'string' ? { name: ing, quantity: '' } : ing
+          ),
           instructions: recipe.instructions,
         });
       }
@@ -82,21 +86,31 @@ export default function Submit() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleArrayChange = (index: number, value: string, field: 'ingredients' | 'instructions') => {
+  const handleIngredientChange = (index: number, field: keyof Ingredient, value: string) => {
+    const newIngredients = [...formData.ingredients] as Ingredient[];
+    newIngredients[index] = { ...newIngredients[index], [field]: value };
+    setFormData(prev => ({ ...prev, ingredients: newIngredients }));
+  };
+
+  const handleArrayChange = (index: number, value: string, field: 'instructions') => {
     const newArray = [...formData[field]];
     newArray[index] = value;
     setFormData(prev => ({ ...prev, [field]: newArray }));
   };
 
   const addArrayItem = (field: 'ingredients' | 'instructions') => {
-    setFormData(prev => ({ ...prev, [field]: [...prev[field], ''] }));
+    if (field === 'ingredients') {
+      setFormData(prev => ({ ...prev, ingredients: [...prev.ingredients, { name: '', quantity: '' }] }));
+    } else {
+      setFormData(prev => ({ ...prev, instructions: [...prev.instructions, ''] }));
+    }
   };
 
   const removeArrayItem = (index: number, field: 'ingredients' | 'instructions') => {
     if (formData[field].length > 1) {
       const newArray = [...formData[field]];
       newArray.splice(index, 1);
-      setFormData(prev => ({ ...prev, [field]: newArray }));
+      setFormData(prev => ({ ...prev, [field]: newArray } as any));
     }
   };
 
@@ -288,20 +302,33 @@ export default function Submit() {
             </button>
           </div>
           <div className="space-y-4">
-            {formData.ingredients.map((ing, i) => (
-              <div key={i} className="flex gap-4">
-                <input 
-                  type="text" 
-                  value={ing}
-                  onChange={(e) => handleArrayChange(i, e.target.value, 'ingredients')}
-                  placeholder={`Ingrediente ${i + 1}`} 
-                  className="flex-1 p-4 rounded-xl bg-surface-container border-none focus:ring-2 focus:ring-primary outline-none" 
-                />
+            {(formData.ingredients as Ingredient[]).map((ing, i) => (
+              <div key={i} className="flex flex-col md:flex-row gap-4 p-4 bg-surface-container rounded-2xl relative group">
+                <div className="flex-1 space-y-2">
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Quantidade</label>
+                  <input 
+                    type="text" 
+                    value={ing.quantity}
+                    onChange={(e) => handleIngredientChange(i, 'quantity', e.target.value)}
+                    placeholder="Ex: 1 xícara, 200g..." 
+                    className="w-full p-3 rounded-xl bg-white border border-stone-100 focus:ring-2 focus:ring-primary outline-none text-sm" 
+                  />
+                </div>
+                <div className="flex-[2] space-y-2">
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Ingrediente</label>
+                  <input 
+                    type="text" 
+                    value={ing.name}
+                    onChange={(e) => handleIngredientChange(i, 'name', e.target.value)}
+                    placeholder="Ex: Açúcar, Farinha de trigo..." 
+                    className="w-full p-3 rounded-xl bg-white border border-stone-100 focus:ring-2 focus:ring-primary outline-none text-sm" 
+                  />
+                </div>
                 {formData.ingredients.length > 1 && (
                   <button 
                     type="button" 
                     onClick={() => removeArrayItem(i, 'ingredients')}
-                    className="p-4 text-stone-400 hover:text-red-500 transition-colors"
+                    className="absolute -top-2 -right-2 md:static p-2 text-stone-400 hover:text-red-500 transition-colors bg-white md:bg-transparent rounded-full shadow-sm md:shadow-none"
                   >
                     <Trash2 className="w-5 h-5" />
                   </button>

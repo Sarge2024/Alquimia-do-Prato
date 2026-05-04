@@ -18,7 +18,12 @@ const MOCK_RECIPES_DETAIL: Record<string, Recipe> = {
     rating: 4.9,
     reviewsCount: 45,
     image: 'https://images.unsplash.com/photo-1541519227354-08fa5d50c44d?auto=format&fit=crop&q=80&w=800',
-    ingredients: ['100g de goma de tapioca peneirada', '50g de queijo coalho ralado grosso', 'Manteiga de garrafa para finalizar', 'Recheio de sua preferência (coco, queijo ou carne de sol)'],
+    ingredients: [
+      { name: 'goma de tapioca peneirada', quantity: '100g' },
+      { name: 'queijo coalho ralado grosso', quantity: '50g' },
+      { name: 'Manteiga de garrafa para finalizar', quantity: 'a gosto' },
+      { name: 'Recheio de sua preferência (coco, queijo ou carne de sol)', quantity: '' }
+    ],
     instructions: [
       'Aqueça uma frigideira antiaderente em fogo médio.',
       'Espalhe o queijo coalho ralado por toda a superfície da frigideira até formar uma camada fina.',
@@ -41,7 +46,14 @@ const MOCK_RECIPES_DETAIL: Record<string, Recipe> = {
     rating: 5.0,
     reviewsCount: 128,
     image: 'https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?auto=format&fit=crop&q=80&w=800',
-    ingredients: ['500g de feijão preto', '200g de carne seca', '200g de lombo salgado', '100g de paio', '100g de linguiça calabresa', 'Arroz branco, couve e farofa para acompanhar'],
+    ingredients: [
+      { name: 'feijão preto', quantity: '500g' },
+      { name: 'carne seca', quantity: '200g' },
+      { name: 'lombo salgado', quantity: '200g' },
+      { name: 'paio', quantity: '100g' },
+      { name: 'linguiça calabresa', quantity: '100g' },
+      { name: 'Arroz branco, couve e farofa para acompanhar', quantity: 'a gosto' }
+    ],
     instructions: [
       'Deixe as carnes salgadas de molho por 24h trocando a água.',
       'Cozinhe o feijão com as carnes mais duras primeiro.',
@@ -64,7 +76,13 @@ const MOCK_RECIPES_DETAIL: Record<string, Recipe> = {
     rating: 4.8,
     reviewsCount: 67,
     image: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&q=80&w=800',
-    ingredients: ['2 Filés de salmão', 'Salsa e alecrim picados', 'Raspas de limão siciliano', 'Azeite de oliva extra virgem', 'Sal e pimenta a gosto'],
+    ingredients: [
+      { name: 'Filés de salmão', quantity: '2' },
+      { name: 'Salsa e alecrim picados', quantity: 'a gosto' },
+      { name: 'Raspas de limão siciliano', quantity: 'a gosto' },
+      { name: 'Azeite de oliva extra virgem', quantity: 'a gosto' },
+      { name: 'Sal e pimenta a gosto', quantity: '' }
+    ],
     instructions: [
       'Tempere os filés com sal e pimenta.',
       'Misture as ervas com as raspas de limão e um pouco de azeite.',
@@ -86,7 +104,12 @@ const MOCK_RECIPES_DETAIL: Record<string, Recipe> = {
     rating: 4.9,
     reviewsCount: 210,
     image: 'https://images.unsplash.com/photo-1528975604071-b4dc52a2d18c?auto=format&fit=crop&q=80&w=800',
-    ingredients: ['1 lata de leite condensado', '2 latas de leite integral', '3 ovos', '1 xícara de açúcar para a calda'],
+    ingredients: [
+      { name: 'leite condensado', quantity: '1 lata' },
+      { name: 'leite integral', quantity: '2 latas' },
+      { name: 'ovos', quantity: '3' },
+      { name: 'açúcar para a calda', quantity: '1 xícara' }
+    ],
     instructions: [
       'Prepare a calda derretendo o açúcar na forma de pudim até dourar.',
       'Bata no liquidificador o leite condensado, o leite e os ovos.',
@@ -104,6 +127,7 @@ export default function RecipeDetail() {
   const navigate = useNavigate();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [user, setUser] = useState(auth.currentUser);
 
   useEffect(() => {
@@ -139,6 +163,7 @@ export default function RecipeDetail() {
   const handleDelete = async () => {
     if (!recipe || !recipe.id) return;
     if (window.confirm('Tem certeza que deseja excluir esta receita?')) {
+      setIsDeleting(true);
       try {
         await recipeService.deleteRecipe(recipe.id);
         alert('Receita excluída com sucesso.');
@@ -146,6 +171,8 @@ export default function RecipeDetail() {
       } catch (error) {
         console.error('Delete error:', error);
         alert('Erro ao excluir a receita.');
+      } finally {
+        setIsDeleting(false);
       }
     }
   };
@@ -169,6 +196,8 @@ export default function RecipeDetail() {
   }
 
   const isOwner = user && recipe.ownerId === user.uid;
+  const isAdmin = user && user.email === 'sagacitas.sistemas@gmail.com';
+  const canManage = isOwner || isAdmin;
 
   return (
     <motion.div 
@@ -182,7 +211,7 @@ export default function RecipeDetail() {
           <ChevronLeft className="w-5 h-5" /> Explorar Receitas
         </Link>
         
-        {isOwner && (
+        {canManage && (
           <div className="flex gap-3">
             <Link 
               to={`/submit/${recipe.id}`}
@@ -192,9 +221,11 @@ export default function RecipeDetail() {
             </Link>
             <button 
               onClick={handleDelete}
-              className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-all font-semibold"
+              disabled={isDeleting}
+              className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-all font-semibold disabled:opacity-50"
             >
-              <Trash2 className="w-4 h-4" /> Excluir
+              {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+              {isDeleting ? 'Excluindo...' : 'Excluir'}
             </button>
           </div>
         )}
@@ -284,11 +315,18 @@ export default function RecipeDetail() {
             <h3 className="text-2xl font-bold mb-6 text-primary border-b border-primary/10 pb-4">Ingredientes</h3>
             <ul className="space-y-4">
               {recipe.ingredients.map((ing, i) => (
-                <li key={i} className="flex items-start gap-4 group cursor-pointer">
+                <li key={i} className="flex items-start gap-4 group cursor-pointer border-b border-primary/5 pb-2 last:border-0">
                   <div className="mt-1 flex-shrink-0">
                     <CheckCircle2 className="w-5 h-5 text-stone-300 group-hover:text-secondary transition-colors" />
                   </div>
-                  <span className="text-on-surface-variant group-hover:text-on-surface transition-colors font-medium">{ing}</span>
+                  <div className="flex flex-col">
+                    {typeof ing === 'object' && ing.quantity && (
+                      <span className="text-[10px] font-bold uppercase text-primary mb-0.5">{ing.quantity}</span>
+                    )}
+                    <span className="text-on-surface-variant group-hover:text-on-surface transition-colors font-medium">
+                      {typeof ing === 'string' ? ing : ing.name}
+                    </span>
+                  </div>
                 </li>
               ))}
             </ul>

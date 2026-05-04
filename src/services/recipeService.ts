@@ -52,6 +52,11 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
   throw new Error(`Firestore operation failed: ${errInfo.error}`);
 }
 
+export interface Ingredient {
+  name: string;
+  quantity: string;
+}
+
 export interface Recipe {
   id?: string;
   title: string;
@@ -61,7 +66,7 @@ export interface Recipe {
   time?: string;
   servings?: string;
   difficulty?: string;
-  ingredients: string[];
+  ingredients: (string | Ingredient)[]; // Maintain string support for backward compatibility/simplicity
   instructions: string[];
   ownerId: string;
   createdAt?: any;
@@ -201,7 +206,12 @@ export const recipeService = {
         rating: 4.9,
         reviewsCount: 45,
         image: 'https://images.unsplash.com/photo-1541519227354-08fa5d50c44d?auto=format&fit=crop&q=80&w=800',
-        ingredients: ['100g de goma de tapioca peneirada', '50g de queijo coalho ralado grosso', 'Manteiga de garrafa para finalizar', 'Recheio de sua preferência (coco, queijo ou carne de sol)'],
+        ingredients: [
+          { name: 'goma de tapioca peneirada', quantity: '100g' },
+          { name: 'queijo coalho ralado grosso', quantity: '50g' },
+          { name: 'Manteiga de garrafa para finalizar', quantity: 'a gosto' },
+          { name: 'Recheio de sua preferência (coco, queijo ou carne de sol)', quantity: '' }
+        ],
         instructions: [
           'Aqueça uma frigideira antiaderente em fogo médio.',
           'Espalhe o queijo coalho ralado por toda a superfície da frigideira até formar uma camada fina.',
@@ -222,7 +232,14 @@ export const recipeService = {
         rating: 5.0,
         reviewsCount: 128,
         image: 'https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?auto=format&fit=crop&q=80&w=800',
-        ingredients: ['500g de feijão preto', '200g de carne seca', '200g de lombo salgado', '100g de paio', '100g de linguiça calabresa', 'Arroz branco, couve e farofa para acompanhar'],
+        ingredients: [
+          { name: 'feijão preto', quantity: '500g' },
+          { name: 'carne seca', quantity: '200g' },
+          { name: 'lombo salgado', quantity: '200g' },
+          { name: 'paio', quantity: '100g' },
+          { name: 'linguiça calabresa', quantity: '100g' },
+          { name: 'Arroz branco, couve e farofa para acompanhar', quantity: 'a gosto' }
+        ],
         instructions: [
           'Deixe as carnes salgadas de molho por 24h trocando a água.',
           'Cozinhe o feijão com as carnes mais duras primeiro.',
@@ -243,7 +260,13 @@ export const recipeService = {
         rating: 4.8,
         reviewsCount: 67,
         image: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&q=80&w=800',
-        ingredients: ['2 Filés de salmão', 'Salsa e alecrim picados', 'Raspas de limão siciliano', 'Azeite de oliva extra virgem', 'Sal e pimenta a gosto'],
+        ingredients: [
+          { name: 'Filés de salmão', quantity: '2' },
+          { name: 'Salsa e alecrim picados', quantity: 'a gosto' },
+          { name: 'Raspas de limão siciliano', quantity: 'a gosto' },
+          { name: 'Azeite de oliva extra virgem', quantity: 'a gosto' },
+          { name: 'Sal e pimenta a gosto', quantity: '' }
+        ],
         instructions: [
           'Tempere os filés com sal e pimenta.',
           'Misture as ervas com as raspas de limão e um pouco de azeite.',
@@ -263,7 +286,12 @@ export const recipeService = {
         rating: 4.9,
         reviewsCount: 210,
         image: 'https://images.unsplash.com/photo-1528975604071-b4dc52a2d18c?auto=format&fit=crop&q=80&w=800',
-        ingredients: ['1 lata de leite condensado', '2 latas de leite integral', '3 ovos', '1 xícara de açúcar para a calda'],
+        ingredients: [
+          { name: 'leite condensado', quantity: '1 lata' },
+          { name: 'leite integral', quantity: '2 latas' },
+          { name: 'ovos', quantity: '3' },
+          { name: 'açúcar para a calda', quantity: '1 xícara' }
+        ],
         instructions: [
           'Prepare a calda derretendo o açúcar na forma de pudim até dourar.',
           'Bata no liquidificador o leite condensado, o leite e os ovos.',

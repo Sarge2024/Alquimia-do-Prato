@@ -215,10 +215,14 @@ export default function Home() {
                       <h3 className="text-2xl font-bold text-on-surface mb-4 group-hover:text-primary transition-colors leading-snug line-clamp-1">
                         {recipe.title}
                       </h3>
-                      <div className="flex items-center justify-between text-on-surface-variant font-semibold text-sm">
+                      <div className="flex flex-wrap items-center justify-between text-on-surface-variant font-semibold text-sm">
                         <div className="flex items-center gap-2">
                           <Clock className="w-4 h-4" />
                           {recipe.time || 'N/A'}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Utensils className="w-4 h-4" />
+                          {recipe.servings || 'N/A'}
                         </div>
                         <div className="flex items-center gap-1">
                           <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />

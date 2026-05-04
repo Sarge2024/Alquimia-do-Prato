@@ -18,7 +18,7 @@ export const geminiService = {
       - time (string, ex: '45 min')
       - difficulty (uma das seguintes: 'Fácil', 'Médio', 'Avançado')
       - servings (string, ex: '4')
-      - ingredients (string[])
+      - ingredients (objeto[] com campos 'name' e 'quantity', ex: [{ "name": "Açúcar", "quantity": "1 xícara" }])
       - instructions (string[])
       - image (string, use a URL da imagem se encontrada, caso contrário deixe vazio)
 

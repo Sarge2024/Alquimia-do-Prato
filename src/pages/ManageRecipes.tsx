@@ -14,6 +14,7 @@ export default function ManageRecipes() {
   const [scrapeUrl, setScrapeUrl] = useState('');
   const [user, setUser] = useState(auth.currentUser);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -72,6 +73,7 @@ export default function ManageRecipes() {
 
   const handleDelete = async (id: string) => {
     if (!id) return;
+    setIsDeleting(true);
     try {
       await recipeService.deleteRecipe(id);
       setRecipes(prev => prev.filter(r => r.id !== id));
@@ -79,6 +81,8 @@ export default function ManageRecipes() {
     } catch (error) {
       console.error('Error deleting recipe:', error);
       alert('Erro ao excluir a receita.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -267,15 +271,23 @@ export default function ManageRecipes() {
               <div className="flex gap-4">
                 <button 
                   onClick={() => setDeletingId(null)}
-                  className="flex-1 py-4 px-6 rounded-2xl font-bold text-on-surface-variant hover:bg-stone-50 transition-colors"
+                  disabled={isDeleting}
+                  className="flex-1 py-4 px-6 rounded-2xl font-bold text-on-surface-variant hover:bg-stone-50 transition-colors disabled:opacity-50"
                 >
                   Cancelar
                 </button>
                 <button 
                   onClick={() => deletingId && handleDelete(deletingId)}
-                  className="flex-2 py-4 px-6 rounded-2xl font-bold bg-red-500 text-white hover:bg-red-600 shadow-lg shadow-red-200 transition-all active:scale-[0.98]"
+                  disabled={isDeleting}
+                  className="flex-2 py-4 px-6 rounded-2xl font-bold bg-red-500 text-white hover:bg-red-600 shadow-lg shadow-red-200 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  Sim, Excluir
+                  {isDeleting ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" /> Excluindo...
+                    </>
+                  ) : (
+                    'Sim, Excluir'
+                  )}
                 </button>
               </div>
             </motion.div>
