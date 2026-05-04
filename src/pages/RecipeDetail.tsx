@@ -7,36 +7,6 @@ import { auth } from '../lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
 const MOCK_RECIPES_DETAIL: Record<string, Recipe> = {
-  'caipirinha-classica': {
-    id: 'caipirinha-classica',
-    title: 'Caipirinha de Limão Perfeita',
-    description: 'A autêntica caipirinha brasileira, refrescante e equilibrada. O segredo está no corte do limão e na proporção exata de açúcar.',
-    category: 'Bebidas',
-    time: '5 min',
-    difficulty: 'Fácil',
-    servings: '1',
-    rating: 5.0,
-    reviewsCount: 89,
-    image: 'https://images.unsplash.com/photo-1544145945-f904253d0c7b?auto=format&fit=crop&q=80&w=800',
-    ingredients: [
-      '1 Limão Taiti grande e fresco',
-      '2 colheres (sopa) de açúcar refinado (ou a gosto)',
-      '50ml de Cachaça de boa qualidade (preferência branca)',
-      'Gelo em cubos (bastante)'
-    ],
-    instructions: [
-      'Lave bem o limão e corte as extremidades.',
-      'Corte o limão ao meio no sentido do comprimento e remova totalmente o miolo branco central (isso evita que a bebida fique amarga).',
-      'Corte as metades em gomos menores e coloque-os em um copo baixo de vidro.',
-      'Adicione o açúcar sobre os pedaços de limão.',
-      'Com um socador, pressione suavemente os limões para extrair o suco, tomando cuidado para não esmagar demais a casca.',
-      'Encha o copo com cubos de gelo até o topo.',
-      'Derrame a cachaça sobre o gelo e mexa suavemente com uma colher de cabo longo.',
-      'Sirva com um canudo curto ou apenas no copo e aproveite com moderação!'
-    ],
-    ownerId: 'system',
-    createdAt: new Date().toISOString()
-  },
   'tapioca-rendada': {
     id: 'tapioca-rendada',
     title: 'Tapioca Rendada com Queijo Coalho',

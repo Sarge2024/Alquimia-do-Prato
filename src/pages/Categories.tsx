@@ -25,12 +25,6 @@ const CATEGORIES_DETAILED = [
     desc: 'Doces artesanais que celebram sabores naturais.',
     count: '27 receitas',
     img: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&q=80&w=800' 
-  },
-  { 
-    name: 'Bebidas', 
-    desc: 'Sucos naturais, chás e coquetéis botânicos.',
-    count: '15 receitas',
-    img: 'https://images.unsplash.com/photo-1544145945-f904253d0c7b?auto=format&fit=crop&q=80&w=800'
   }
 ];
 

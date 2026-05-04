@@ -38,10 +38,15 @@ export default function Submit() {
 
     if (isEditing) {
       loadRecipe(id);
+    } else if (location.state?.scrapedData) {
+      setFormData(prev => ({
+        ...prev,
+        ...location.state.scrapedData
+      }));
     }
 
     return () => unsubscribe();
-  }, [id, isEditing]);
+  }, [id, isEditing, location.state]);
 
   const loadRecipe = async (recipeId: string) => {
     try {
@@ -188,7 +193,6 @@ export default function Submit() {
                 <option>Almoço</option>
                 <option>Jantar</option>
                 <option>Sobremesas</option>
-                <option>Bebidas</option>
               </select>
             </div>
           </div>

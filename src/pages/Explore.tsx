@@ -52,18 +52,6 @@ const MOCK_RECIPES = [
     ownerId: 'system',
     ingredients: [],
     instructions: []
-  },
-  {
-    id: 'caipirinha-classica',
-    title: 'Caipirinha de Limão Perfeita',
-    category: 'Bebidas',
-    time: '5 min',
-    rating: 5.0,
-    reviewsCount: 89,
-    image: 'https://images.unsplash.com/photo-1544145945-f904253d0c7b?auto=format&fit=crop&q=80&w=800',
-    ownerId: 'system',
-    ingredients: [],
-    instructions: []
   }
 ];
 
@@ -110,7 +98,6 @@ export default function Explore() {
       case 'Almoço': return 'bg-primary-fixed text-on-primary-fixed';
       case 'Jantar': return 'bg-secondary-container text-on-secondary-container';
       case 'Sobremesas': return 'bg-pink-100 text-pink-700';
-      case 'Bebidas': return 'bg-blue-100 text-blue-700';
       default: return 'bg-stone-100 text-stone-700';
     }
   };
@@ -152,7 +139,7 @@ export default function Explore() {
                   Categorias <ChevronDown className="w-4 h-4" />
                 </button>
                 <div className="mt-3 space-y-2 text-sm text-on-surface-variant">
-                  {['Café da Manhã', 'Almoço', 'Jantar', 'Sobremesas', 'Bebidas'].map(cat => (
+                  {['Café da Manhã', 'Almoço', 'Jantar', 'Sobremesas'].map(cat => (
                     <label key={cat} className="flex items-center gap-2 cursor-pointer">
                       <input 
                         type="radio" 
@@ -216,7 +203,7 @@ export default function Explore() {
               {filteredRecipes.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredRecipes.map((recipe, i) => (
-                    <div key={recipe.id || i} className="relative group">
+                    <div key={recipe.id || `explore-recipe-${i}`} className="relative group">
                       <Link to={`/recipe/${recipe.id}`}>
                         <motion.article 
                           initial={{ opacity: 0, scale: 0.95 }}

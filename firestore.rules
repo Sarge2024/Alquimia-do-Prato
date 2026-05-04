@@ -28,14 +28,20 @@ service cloud.firestore {
       return resource.data;
     }
 
+    function isAdmin() {
+      return isSignedIn() 
+        && request.auth.token.email == 'sagacitas.sistemas@gmail.com' 
+        && request.auth.token.email_verified == true;
+    }
+
     // --- Recipe Validation ---
     function isValidRecipe(data) {
       return data.keys().hasAll(['title', 'category', 'ingredients', 'instructions', 'ownerId', 'createdAt', 'updatedAt'])
         && data.title is string && data.title.size() <= 100
-        && data.category in ['Café da Manhã', 'Almoço', 'Jantar', 'Sobremesas', 'Bebidas']
+        && data.category in ['Café da Manhã', 'Almoço', 'Jantar', 'Sobremesas']
         && data.ingredients is list && data.ingredients.size() <= 50
         && data.instructions is list && data.instructions.size() <= 50
-        && data.ownerId == request.auth.uid
+        && (data.ownerId == request.auth.uid || (resource != null && data.ownerId == existing().ownerId))
         && (data.image == null || (data.image is string && data.image.size() <= 2048))
         && (data.servings == null || (data.servings is string && data.servings.size() <= 64))
         && (data.difficulty == null || data.difficulty in ['Fácil', 'Médio', 'Avançado'])
@@ -44,6 +50,10 @@ service cloud.firestore {
     }
 
     // --- Collections ---
+    match /test/connection {
+      allow read: if true;
+    }
+
     match /recipes/{recipeId} {
       allow read: if true; // Publicly readable
       
@@ -53,9 +63,10 @@ service cloud.firestore {
         && incoming().createdAt == request.time
         && incoming().updatedAt == request.time;
 
-      allow update: if isOwner(existing().ownerId)
+      allow update: if (isOwner(existing().ownerId) || isAdmin())
         && isValidRecipe(incoming())
         && incoming().ownerId == existing().ownerId
+        && (incoming().ownerId == request.auth.uid || isAdmin())
         && incoming().createdAt == existing().createdAt
         && incoming().updatedAt == request.time
         && (
@@ -63,7 +74,7 @@ service cloud.firestore {
           incoming().diff(existing()).affectedKeys().hasAny(['title', 'description', 'image', 'category', 'time', 'servings', 'difficulty', 'ingredients', 'instructions', 'updatedAt'])
         );
 
-      allow delete: if isOwner(existing().ownerId);
+      allow delete: if isOwner(existing().ownerId) || isAdmin();
     }
   }
 }

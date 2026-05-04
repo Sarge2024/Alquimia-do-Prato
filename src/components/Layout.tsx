@@ -76,6 +76,22 @@ export default function Layout({ children }: LayoutProps) {
               >
                 Enviar
               </Link>
+              {user && (
+                <Link 
+                  to="/manage" 
+                  className={`${isActive('/manage') ? 'text-primary font-bold border-b-2 border-primary' : 'hover:text-primary'} pb-1 transition-all`}
+                >
+                  Minhas Receitas
+                </Link>
+              )}
+              {user?.email === 'sagacitas.sistemas@gmail.com' && (
+                <Link 
+                  to="/admin" 
+                  className={`${isActive('/admin') ? 'text-primary font-bold border-b-2 border-primary' : 'hover:text-primary'} pb-1 transition-all`}
+                >
+                  Admin
+                </Link>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-6">

@@ -9,7 +9,6 @@ const CATEGORIES = [
   { name: 'Almoço', img: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&q=80&w=800' },
   { name: 'Jantar', img: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&q=80&w=800' },
   { name: 'Sobremesas', img: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&q=80&w=800' },
-  { name: 'Bebidas', img: 'https://images.unsplash.com/photo-1544145945-f904253d0c7b?auto=format&fit=crop&q=80&w=800' },
 ];
 
 const MOCK_RECIPES = [
@@ -48,18 +47,6 @@ const MOCK_RECIPES = [
     ownerId: 'system',
     ingredients: [],
     instructions: []
-  },
-  {
-    id: 'caipirinha-classica',
-    title: 'Caipirinha de Limão Perfeita',
-    category: 'Bebidas',
-    time: '5 min',
-    rating: 5.0,
-    reviewsCount: 89,
-    image: 'https://images.unsplash.com/photo-1544145945-f904253d0c7b?auto=format&fit=crop&q=80&w=800',
-    ownerId: 'system',
-    ingredients: [],
-    instructions: []
   }
 ];
 
@@ -93,7 +80,6 @@ export default function Home() {
       case 'Almoço': return 'bg-primary-fixed text-on-primary-fixed';
       case 'Jantar': return 'bg-secondary-container text-on-secondary-container';
       case 'Sobremesas': return 'bg-pink-100 text-pink-700';
-      case 'Bebidas': return 'bg-blue-100 text-blue-700';
       default: return 'bg-stone-100 text-stone-700';
     }
   };
@@ -161,12 +147,12 @@ export default function Home() {
             </Link>
           </div>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+        <div className="flex flex-wrap justify-center gap-8 md:gap-16">
           {CATEGORIES.map((cat, i) => (
             <Link 
               key={i} 
               to={`/explore?category=${encodeURIComponent(cat.name)}`}
-              className="group flex flex-col items-center gap-4 cursor-pointer"
+              className="group flex flex-col items-center gap-4 cursor-pointer min-w-[140px]"
             >
               <motion.div 
                 whileHover={{ y: -5 }}
@@ -197,7 +183,7 @@ export default function Home() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {recipes.map((recipe, i) => (
-              <div key={recipe.id || i} className="relative group">
+              <div key={recipe.id || `home-recipe-${i}`} className="relative group">
                 <Link to={`/recipe/${recipe.id}`}>
                   <motion.article 
                     initial={{ opacity: 0, y: 20 }}

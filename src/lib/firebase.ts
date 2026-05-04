@@ -11,9 +11,16 @@ export const auth = getAuth();
 async function testConnection() {
   try {
     await getDocFromServer(doc(db, 'test', 'connection'));
+    console.log("Firebase connection established successfully.");
   } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.error("Please check your Firebase configuration. You might be offline or project is not properly provisioned.");
+    if (error instanceof Error) {
+      if (error.message.includes('permission-denied')) {
+        console.log("Firebase connection verified (Permission Denied as expected on test path).");
+      } else if (error.message.includes('the client is offline')) {
+        console.error("Firebase connection failed: Client is offline.");
+      } else {
+        console.warn("Firebase connection status unknown:", error.message);
+      }
     }
   }
 }
