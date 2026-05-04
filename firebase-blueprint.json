@@ -1,0 +1,32 @@
+{
+  "entities": {
+    "Recipe": {
+      "title": "Recipe",
+      "description": "Uma receita culinária no Alquimia do Prato",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Título da receita" },
+        "description": { "type": "string", "description": "Breve descrição ou história da receita" },
+        "image": { "type": "string", "description": "URL da imagem da receita" },
+        "category": { "type": "string", "enum": ["Café da Manhã", "Almoço", "Jantar", "Sobremesas", "Bebidas"], "description": "Categoria da receita" },
+        "time": { "type": "string", "description": "Tempo de preparo (ex: 30 min)" },
+        "servings": { "type": "string", "description": "Número de porções" },
+        "difficulty": { "type": "string", "enum": ["Fácil", "Médio", "Avançado"], "description": "Nível de dificuldade" },
+        "ingredients": { "type": "array", "items": { "type": "string" }, "description": "Lista de ingredientes" },
+        "instructions": { "type": "array", "items": { "type": "string" }, "description": "Passos do modo de preparo" },
+        "ownerId": { "type": "string", "description": "UID do usuário que criou a receita" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Data de criação" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Data da última atualização" },
+        "rating": { "type": "number", "description": "Avaliação média" },
+        "reviewsCount": { "type": "number", "description": "Número de avaliações" }
+      },
+      "required": ["title", "category", "ingredients", "instructions", "ownerId"]
+    }
+  },
+  "firestore": {
+    "recipes": {
+      "schema": "Recipe",
+      "description": "Coleção central de todas as receitas do Alquimia do Prato"
+    }
+  }
+}

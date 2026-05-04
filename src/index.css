@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Be Vietnam Pro", sans-serif;
+
+  --color-primary: #914730;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #af5e46;
+  
+  --color-secondary: #56642b;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #d6e7a1;
+  
+  --color-tertiary: #725550;
+  
+  --color-surface-container: #f1ede8;
+  --color-surface-container-low: #f7f3ee;
+  --color-surface-container-high: #ebe8e3;
+  --color-surface-container-highest: #e6e2dd;
+  
+  --color-background: #fdf9f4;
+  --color-on-surface: #1c1c19;
+  --color-on-surface-variant: #54433e;
+  
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-on-surface font-body;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-sans;
+  }
+}
+
+.glass {
+  @apply bg-white/80 backdrop-blur-md border-b border-stone-200;
+}
+
+.recipe-card-shadow {
+  shadow: 0 4px 20px -2px rgba(145, 71, 48, 0.08);
+}
+
+.recipe-card-shadow:hover {
+  shadow: 0 10px 40px -4px rgba(145, 71, 48, 0.12);
+}
