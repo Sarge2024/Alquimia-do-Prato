@@ -1,53 +1,107 @@
 import { motion } from 'motion/react';
-import { Heart, Star, Clock, Filter, ChevronDown, Loader2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Heart, Star, Clock, Filter, ChevronDown, Loader2, X } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { recipeService, Recipe } from '../services/recipeService';
 
 const MOCK_RECIPES = [
   {
-    id: 'pesto-manjericao',
-    title: 'Pesto de Manjericão Silvestre',
-    category: 'Jantar',
-    time: '15 min',
+    id: 'tapioca-rendada',
+    title: 'Tapioca Rendada com Queijo Coalho',
+    category: 'Café da Manhã',
+    time: '12 min',
     rating: 4.9,
-    reviewsCount: 124,
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCfTTB9gpP4nLbclNAIwY-gebxMg0T9maHRMG5vO-onmKiaOCLR3TA3ZcSWs-e5ooXvYvxxYvitvEPV0qNzQ4nfJEBpGGaMJoHaLfYpffsIdLIDwNLroUQjrApzq4NJtcUiHlLUNVMIA8gkHTqry1JcHA3B7VpW66kNKvwfEpzZZuva-AybbQ_qBurtARZqE6dj1_NMOIRx91VmUi916qYy5T9JHR8qhZHfH_I0_I4o-7_UIo9k7UgToSRqRqo6lq3G59Rp7wVJHAE4'
+    reviewsCount: 45,
+    image: 'https://images.unsplash.com/photo-1541519227354-08fa5d50c44d?auto=format&fit=crop&q=80&w=800',
+    ownerId: 'system',
+    ingredients: [],
+    instructions: []
   },
   {
-    id: 'salada-beterraba',
-    title: 'Salada de Beterraba Tostada',
+    id: 'feijoada-completa',
+    title: 'Feijoada Completa Tradicional',
     category: 'Almoço',
-    time: '35 min',
+    time: '3h 00min',
+    rating: 5.0,
+    reviewsCount: 128,
+    image: 'https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?auto=format&fit=crop&q=80&w=800',
+    ownerId: 'system',
+    ingredients: [],
+    instructions: []
+  },
+  {
+    id: 'salmao-ervas',
+    title: 'Salmão com Crosta de Ervas',
+    category: 'Jantar',
+    time: '25 min',
     rating: 4.8,
+    reviewsCount: 67,
+    image: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&q=80&w=800',
+    ownerId: 'system',
+    ingredients: [],
+    instructions: []
+  },
+  {
+    id: 'pudim-leite',
+    title: 'Pudim de Leite Condensado',
+    category: 'Sobremesas',
+    time: '1h 30min',
+    rating: 4.9,
+    reviewsCount: 210,
+    image: 'https://images.unsplash.com/photo-1528975604071-b4dc52a2d18c?auto=format&fit=crop&q=80&w=800',
+    ownerId: 'system',
+    ingredients: [],
+    instructions: []
+  },
+  {
+    id: 'caipirinha-classica',
+    title: 'Caipirinha de Limão Perfeita',
+    category: 'Bebidas',
+    time: '5 min',
+    rating: 5.0,
     reviewsCount: 89,
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCyC3dJg4m6w-bPPmM-yMlsyYX-L2LQA1pSxYvSKdyN_DK4ilQj4l8O6x4GWefOV5bUk2-r5QnGulqo0TzoLYtaIwiMnftOFGe3F0n32bqG1ds77JejLfx1FvLdTr_k-2eUDiozk5nlkL-yLPtQFaz5U3CatR0jCkVoK6fXma1o7hGRuJEaD7QX7QsxJWn0fWEPbIemSpntgFOGv_R2bEBPZuzYLYvSJP7gsiBz4r2JKJiB4yuSTYkSoG4dIcPQCUkQIn4JbP40gvll'
+    image: 'https://images.unsplash.com/photo-1544145945-f904253d0c7b?auto=format&fit=crop&q=80&w=800',
+    ownerId: 'system',
+    ingredients: [],
+    instructions: []
   }
 ];
 
 export default function Explore() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const categoryFilter = searchParams.get('category');
+  
   const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadRecipes();
   }, []);
 
+  useEffect(() => {
+    if (categoryFilter) {
+      setFilteredRecipes(recipes.filter(r => r.category === categoryFilter));
+    } else {
+      setFilteredRecipes(recipes);
+    }
+  }, [categoryFilter, recipes]);
+
   const loadRecipes = async () => {
     try {
       const data = await recipeService.getAllRecipes();
-      if (data.length > 0) {
-        setRecipes(data);
-      } else {
-        // Fallback to mock data if collection is empty
-        setRecipes(MOCK_RECIPES as any);
-      }
+      const allRecipes = data.length > 0 ? data : MOCK_RECIPES;
+      setRecipes(allRecipes);
     } catch (error) {
       console.error('Error loading recipes:', error);
-      setRecipes(MOCK_RECIPES as any);
+      setRecipes(MOCK_RECIPES);
     } finally {
       setLoading(false);
     }
+  };
+
+  const clearFilter = () => {
+    setSearchParams({});
   };
 
   const getTagColor = (category: string) => {
@@ -66,6 +120,22 @@ export default function Explore() {
       <header className="mb-12">
         <h1 className="text-4xl font-bold text-on-surface mb-4">Explorar Receitas</h1>
         <p className="text-on-surface-variant text-lg">Navegue por nossa coleção completa de receitas artesanais.</p>
+        
+        {categoryFilter && (
+          <div className="mt-6 flex items-center gap-3">
+            <span className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider">Filtrando por:</span>
+            <div className={`px-4 py-1 rounded-full text-sm font-bold flex items-center gap-2 ${getTagColor(categoryFilter)}`}>
+              {categoryFilter}
+              <button 
+                onClick={clearFilter}
+                className="p-0.5 hover:bg-black/10 rounded-full transition-colors"
+                title="Limpar filtro"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </header>
 
       <div className="flex flex-col md:flex-row gap-8 mb-12">
@@ -76,6 +146,27 @@ export default function Explore() {
               <Filter className="w-5 h-5" /> Filtros
             </h3>
             <div className="space-y-4">
+              {/* Category Filter in Sidebar */}
+              <div className="p-4 bg-surface-container rounded-xl">
+                <button className="w-full flex items-center justify-between font-semibold">
+                  Categorias <ChevronDown className="w-4 h-4" />
+                </button>
+                <div className="mt-3 space-y-2 text-sm text-on-surface-variant">
+                  {['Café da Manhã', 'Almoço', 'Jantar', 'Sobremesas', 'Bebidas'].map(cat => (
+                    <label key={cat} className="flex items-center gap-2 cursor-pointer">
+                      <input 
+                        type="radio" 
+                        name="category" 
+                        checked={categoryFilter === cat}
+                        onChange={() => setSearchParams({ category: cat })}
+                        className="text-primary focus:ring-primary" 
+                      />
+                      <span>{cat}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
               <div className="p-4 bg-surface-container rounded-xl">
                 <button className="w-full flex items-center justify-between font-semibold">
                   Dieta <ChevronDown className="w-4 h-4" />
@@ -121,53 +212,71 @@ export default function Explore() {
               <p className="text-on-surface-variant">Buscando as melhores receitas...</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {recipes.map((recipe, i) => (
-                <Link key={recipe.id || i} to={`/recipe/${recipe.id}`}>
-                  <motion.article 
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="group bg-surface-container-low rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 cursor-pointer border border-stone-100 h-full"
-                  >
-                    <div className="aspect-[4/3] overflow-hidden relative bg-stone-200">
-                      {recipe.image ? (
-                        <img 
-                          src={recipe.image} 
-                          alt={recipe.title} 
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-stone-400 font-bold uppercase text-xs">
-                          Sem Imagem
-                        </div>
-                      )}
-                      <button className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/90 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
+            <>
+              {filteredRecipes.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredRecipes.map((recipe, i) => (
+                    <div key={recipe.id || i} className="relative group">
+                      <Link to={`/recipe/${recipe.id}`}>
+                        <motion.article 
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: i * 0.05 }}
+                          className="group bg-surface-container-low rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 cursor-pointer border border-stone-100 h-full"
+                        >
+                          <div className="aspect-[4/3] overflow-hidden relative bg-stone-200">
+                            {recipe.image ? (
+                              <img 
+                                src={recipe.image} 
+                                alt={recipe.title} 
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                                referrerPolicy="no-referrer"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-stone-400 font-bold uppercase text-xs">
+                                Sem Imagem
+                              </div>
+                            )}
+                          </div>
+                          <div className="p-5">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${getTagColor(recipe.category)} inline-block mb-3`}>
+                              {recipe.category}
+                            </span>
+                            <h3 className="text-xl font-bold text-on-surface mb-3 group-hover:text-primary transition-colors line-clamp-1">
+                              {recipe.title}
+                            </h3>
+                            <div className="flex items-center justify-between text-on-surface-variant text-xs font-semibold">
+                              <div className="flex items-center gap-1.5">
+                                <Clock className="w-3.5 h-3.5" />
+                                {recipe.time || 'N/A'}
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
+                                {recipe.rating?.toFixed(1) || '0.0'}
+                              </div>
+                            </div>
+                          </div>
+                        </motion.article>
+                      </Link>
+                      <button className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/90 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-colors z-10">
                         <Heart className="w-4 h-4" />
                       </button>
                     </div>
-                    <div className="p-5">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${getTagColor(recipe.category)} inline-block mb-3`}>
-                        {recipe.category}
-                      </span>
-                      <h3 className="text-xl font-bold text-on-surface mb-3 group-hover:text-primary transition-colors line-clamp-1">
-                        {recipe.title}
-                      </h3>
-                      <div className="flex items-center justify-between text-on-surface-variant text-xs font-semibold">
-                        <div className="flex items-center gap-1.5">
-                          <Clock className="w-3.5 h-3.5" />
-                          {recipe.time || 'N/A'}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
-                          {recipe.rating?.toFixed(1) || '0.0'}
-                        </div>
-                      </div>
-                    </div>
-                  </motion.article>
-                </Link>
-              ))}
-            </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-20 px-6 bg-surface-container rounded-3xl">
+                  <h3 className="text-xl font-bold text-on-surface mb-2">Nenhuma receita encontrada</h3>
+                  <p className="text-on-surface-variant mb-6">Parece que não temos nada nessa categoria no momento.</p>
+                  <button 
+                    onClick={clearFilter}
+                    className="bg-primary text-white font-bold px-6 py-2 rounded-xl hover:bg-primary-container transition-all"
+                  >
+                    Ver todas as receitas
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

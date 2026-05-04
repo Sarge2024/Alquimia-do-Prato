@@ -6,6 +6,129 @@ import { recipeService, Recipe } from '../services/recipeService';
 import { auth } from '../lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
+const MOCK_RECIPES_DETAIL: Record<string, Recipe> = {
+  'caipirinha-classica': {
+    id: 'caipirinha-classica',
+    title: 'Caipirinha de Limão Perfeita',
+    description: 'A autêntica caipirinha brasileira, refrescante e equilibrada. O segredo está no corte do limão e na proporção exata de açúcar.',
+    category: 'Bebidas',
+    time: '5 min',
+    difficulty: 'Fácil',
+    servings: '1',
+    rating: 5.0,
+    reviewsCount: 89,
+    image: 'https://images.unsplash.com/photo-1544145945-f904253d0c7b?auto=format&fit=crop&q=80&w=800',
+    ingredients: [
+      '1 Limão Taiti grande e fresco',
+      '2 colheres (sopa) de açúcar refinado (ou a gosto)',
+      '50ml de Cachaça de boa qualidade (preferência branca)',
+      'Gelo em cubos (bastante)'
+    ],
+    instructions: [
+      'Lave bem o limão e corte as extremidades.',
+      'Corte o limão ao meio no sentido do comprimento e remova totalmente o miolo branco central (isso evita que a bebida fique amarga).',
+      'Corte as metades em gomos menores e coloque-os em um copo baixo de vidro.',
+      'Adicione o açúcar sobre os pedaços de limão.',
+      'Com um socador, pressione suavemente os limões para extrair o suco, tomando cuidado para não esmagar demais a casca.',
+      'Encha o copo com cubos de gelo até o topo.',
+      'Derrame a cachaça sobre o gelo e mexa suavemente com uma colher de cabo longo.',
+      'Sirva com um canudo curto ou apenas no copo e aproveite com moderação!'
+    ],
+    ownerId: 'system',
+    createdAt: new Date().toISOString()
+  },
+  'tapioca-rendada': {
+    id: 'tapioca-rendada',
+    title: 'Tapioca Rendada com Queijo Coalho',
+    description: 'Uma versão gourmet da tradicional tapioca, com uma crosta crocante de queijo que derrete na boca.',
+    category: 'Café da Manhã',
+    time: '12 min',
+    difficulty: 'Fácil',
+    servings: '1',
+    rating: 4.9,
+    reviewsCount: 45,
+    image: 'https://images.unsplash.com/photo-1541519227354-08fa5d50c44d?auto=format&fit=crop&q=80&w=800',
+    ingredients: ['100g de goma de tapioca peneirada', '50g de queijo coalho ralado grosso', 'Manteiga de garrafa para finalizar', 'Recheio de sua preferência (coco, queijo ou carne de sol)'],
+    instructions: [
+      'Aqueça uma frigideira antiaderente em fogo médio.',
+      'Espalhe o queijo coalho ralado por toda a superfície da frigideira até formar uma camada fina.',
+      'Assim que o queijo começar a derreter, peneire a goma de tapioca por cima do queijo.',
+      'Espere a tapioca "grudar" no queijo e formar a massa única.',
+      'Vire a tapioca para dourar levemente o lado da massa.',
+      'Adicione o recheio escolhido, dobre ao meio e finalize com um fio de manteiga de garrafa.'
+    ],
+    ownerId: 'system',
+    createdAt: new Date().toISOString()
+  },
+  'feijoada-completa': {
+    id: 'feijoada-completa',
+    title: 'Feijoada Completa Tradicional',
+    description: 'O prato mais emblemático do Brasil, preparado com carnes selecionadas e cozido lentamente para atingir perfeição.',
+    category: 'Almoço',
+    time: '3h 00min',
+    difficulty: 'Médio',
+    servings: '6',
+    rating: 5.0,
+    reviewsCount: 128,
+    image: 'https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?auto=format&fit=crop&q=80&w=800',
+    ingredients: ['500g de feijão preto', '200g de carne seca', '200g de lombo salgado', '100g de paio', '100g de linguiça calabresa', 'Arroz branco, couve e farofa para acompanhar'],
+    instructions: [
+      'Deixe as carnes salgadas de molho por 24h trocando a água.',
+      'Cozinhe o feijão com as carnes mais duras primeiro.',
+      'Adicione as carnes mais macias e as linguiças no meio do processo.',
+      'Faça um refogado com alho, cebola e um pouco do caldo da feijoada e retorne à panela.',
+      'Deixe apurar o caldo até engrossar.',
+      'Sirva com os acompanhamentos tradicionais.'
+    ],
+    ownerId: 'system',
+    createdAt: new Date().toISOString()
+  },
+  'salmao-ervas': {
+    id: 'salmao-ervas',
+    title: 'Salmão com Crosta de Ervas',
+    description: 'Uma opção leve e sofisticada para o jantar. O salmão suculento contrasta perfeitamente com a crosta de ervas e cítricos.',
+    category: 'Jantar',
+    time: '25 min',
+    difficulty: 'Fácil',
+    servings: '2',
+    rating: 4.8,
+    reviewsCount: 67,
+    image: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&q=80&w=800',
+    ingredients: ['2 Filés de salmão', 'Salsa e alecrim picados', 'Raspas de limão siciliano', 'Azeite de oliva extra virgem', 'Sal e pimenta a gosto'],
+    instructions: [
+      'Tempere os filés com sal e pimenta.',
+      'Misture as ervas com as raspas de limão e um pouco de azeite.',
+      'Pressione a mistura sobre o topo dos filés de salmão.',
+      'Leve ao forno pré-aquecido a 200°C por cerca de 12-15 minutos.',
+      'Sirva com legumes grelhados ou uma salada verde fresca.'
+    ],
+    ownerId: 'system',
+    createdAt: new Date().toISOString()
+  },
+  'pudim-leite': {
+    id: 'pudim-leite',
+    title: 'Pudim de Leite Condensado',
+    description: 'O clássico dos domingos brasileiros. Textura aveludada, sem furinhos (ou com, se preferir!) e uma calda de caramelo brilhante.',
+    category: 'Sobremesas',
+    time: '1h 30min',
+    difficulty: 'Médio',
+    servings: '8',
+    rating: 4.9,
+    reviewsCount: 210,
+    image: 'https://images.unsplash.com/photo-1528975604071-b4dc52a2d18c?auto=format&fit=crop&q=80&w=800',
+    ingredients: ['1 lata de leite condensado', '2 latas de leite integral', '3 ovos', '1 xícara de açúcar para a calda'],
+    instructions: [
+      'Prepare a calda derretendo o açúcar na forma de pudim até dourar.',
+      'Bata no liquidificador o leite condensado, o leite e os ovos.',
+      'Despeje a mistura na forma caramelizada.',
+      'Cozinhe em banho-maria no forno por cerca de 1 hora.',
+      'Deixe esfriar e leve à geladeira por pelo menos 4 horas antes de desenformar.'
+    ],
+    ownerId: 'system',
+    createdAt: new Date().toISOString()
+  }
+};
+
 export default function RecipeDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -26,12 +149,18 @@ export default function RecipeDetail() {
       const data = await recipeService.getRecipe(recipeId);
       if (data) {
         setRecipe(data);
+      } else if (MOCK_RECIPES_DETAIL[recipeId]) {
+        // Fallback for popular/mock recipes
+        setRecipe(MOCK_RECIPES_DETAIL[recipeId]);
       } else {
-        // Fallback for static demo routes if needed, but usually we want real data
-        console.warn('Recipe not found in Firestore');
+        console.warn('Recipe not found in Firestore or Mocks');
       }
     } catch (error) {
       console.error('Error loading recipe:', error);
+      // Even on error, try to check mocks as fallback
+      if (MOCK_RECIPES_DETAIL[recipeId]) {
+        setRecipe(MOCK_RECIPES_DETAIL[recipeId]);
+      }
     } finally {
       setLoading(false);
     }
@@ -109,7 +238,7 @@ export default function RecipeDetail() {
           className="rounded-3xl overflow-hidden shadow-2xl h-[500px] bg-stone-100"
         >
           {recipe.image ? (
-            <img src={recipe.image} alt={recipe.title} className="w-full h-full object-cover" />
+            <img src={recipe.image} alt={recipe.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-stone-300 font-bold uppercase tracking-widest text-4xl">
               Alquimia

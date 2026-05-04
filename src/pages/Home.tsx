@@ -5,30 +5,61 @@ import { useState, useEffect } from 'react';
 import { recipeService, Recipe } from '../services/recipeService';
 
 const CATEGORIES = [
-  { name: 'Café da Manhã', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAFeBa42Zrz2HEwOgvFogZLBx1_J2LhIjWZVQgu09rdt91vlPJSlnq-b6mxxXyVl6DyrdVf_Bi1fzEnX2vLahPzoaXcY7vXn9yFZ3zZa5bIF53VTGf1ujlJgQuuWTlCbJTqL_tdzCXepHzvoBOmU6RRFQpq9F5wlr_h7m2luNnuV0cSZf2WTXEEK4J1KkeDQ6TimADAheETqLJFCrMtKcEFv47r1nsHGSaiB4Q2nj1JRZgP5r-BeUZKHspiZxLYH0v26jMfFeYV-yZ1' },
-  { name: 'Almoço', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBsyb6617k6pr6srGCcRDK1S-0M_6Vm9gBaCtQ78_yv4QSB82i4oBha4j9uqqdbgZYre1Gva7y6L7d1gim69U3ArrexyDj7gy2nJjPRijEuH5b0QtpHKdtHfaenJR10Ps4sj-zEOCoaBDAF5zRJR7elLy4V2egSWjsP1LGieDkSa6eRtb5fub8AeNv22DPOziOHPjTsB4LAVotm6FAatC_QUkou19QYaulkanjv9qU28h54dKnh3HNkgw3tnDJpHKWF5x7U5DGDOsWj' },
-  { name: 'Jantar', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCCvqsV_1Wczh6W9uBqSqwCmAsNi3U-TN6NPq6VqWdNc1pLfC1T7288a58XuCOiBmWa1SwwW88WVSCy2jvAP2DqlePyyoAiLwGbAj2IGL3wvNQK8A7g9NCfBbB1gkI1hFtxtvhchatp_TfOBgIJ7OfT5W5i8WYCNFLoB4Uk3F3OjRxZbfnuiBZgdkAFvYSECsTFFVvU77RzYD0RJ_9oqm2eOwN1axsj6UY10WGpRV2euGdCnWuegzBId0o3qp0MbPTSzxqDZHsw1oDq' },
-  { name: 'Sobremesas', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDC-RBcMKZPR2GXK9xl5PO0-f0AvjYxMAnIgerLSe1bH6pc6T1f2srd2jNqz7HvExxIVh1xaue_PBrZxAiVwpHbbbKQL6hfep2wVDD63w2KQuCgYbAt1Sgeymp4ZL1HCvTT9qEBfn2dO9S12cZ7Bf07HLOQWkb36iANLiLH1zeK7wi1CFUHDZWDbNvB2w8graCGVjGnmF-UfV5ZBsSvOoxeK72sMo9Lc856flnUNyZiE0RLjm1ljtdOH7rucypsl4c1rgrkHkQLrNDC' },
+  { name: 'Café da Manhã', img: 'https://images.unsplash.com/photo-1493770348161-369560ae357d?auto=format&fit=crop&q=80&w=800' },
+  { name: 'Almoço', img: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&q=80&w=800' },
+  { name: 'Jantar', img: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&q=80&w=800' },
+  { name: 'Sobremesas', img: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&q=80&w=800' },
+  { name: 'Bebidas', img: 'https://images.unsplash.com/photo-1544145945-f904253d0c7b?auto=format&fit=crop&q=80&w=800' },
 ];
 
 const MOCK_RECIPES = [
   {
-    id: 'pesto-manjericao',
-    title: 'Pesto de Manjericão Silvestre',
-    category: 'VEGANO',
-    time: '15 min',
+    id: 'tapioca-rendada',
+    title: 'Tapioca Rendada com Queijo Coalho',
+    category: 'Café da Manhã',
+    time: '12 min',
     rating: 4.9,
-    reviewsCount: 124,
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCfTTB9gpP4nLbclNAIwY-gebxMg0T9maHRMG5vO-onmKiaOCLR3TA3ZcSWs-e5ooXvYvxxYvitvEPV0qNzQ4nfJEBpGGaMJoHaLfYpffsIdLIDwNLroUQjrApzq4NJtcUiHlLUNVMIA8gkHTqry1JcHA3B7VpW66kNKvwfEpzZZuva-AybbQ_qBurtARZqE6dj1_NMOIRx91VmUi916qYy5T9JHR8qhZHfH_I0_I4o-7_UIo9k7UgToSRqRqo6lq3G59Rp7wVJHAE4'
+    reviewsCount: 45,
+    image: 'https://images.unsplash.com/photo-1541519227354-08fa5d50c44d?auto=format&fit=crop&q=80&w=800',
+    ownerId: 'system',
+    ingredients: [],
+    instructions: []
   },
   {
-    id: 'salada-beterraba',
-    title: 'Salada de Beterraba Tostada',
-    category: 'SEM GLÚTEN',
-    time: '35 min',
+    id: 'feijoada-completa',
+    title: 'Feijoada Completa Tradicional',
+    category: 'Almoço',
+    time: '3h 00min',
+    rating: 5.0,
+    reviewsCount: 128,
+    image: 'https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?auto=format&fit=crop&q=80&w=800',
+    ownerId: 'system',
+    ingredients: [],
+    instructions: []
+  },
+  {
+    id: 'salmao-ervas',
+    title: 'Salmão com Crosta de Ervas',
+    category: 'Jantar',
+    time: '25 min',
     rating: 4.8,
+    reviewsCount: 67,
+    image: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&q=80&w=800',
+    ownerId: 'system',
+    ingredients: [],
+    instructions: []
+  },
+  {
+    id: 'caipirinha-classica',
+    title: 'Caipirinha de Limão Perfeita',
+    category: 'Bebidas',
+    time: '5 min',
+    rating: 5.0,
     reviewsCount: 89,
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCyC3dJg4m6w-bPPmM-yMlsyYX-L2LQA1pSxYvSKdyN_DK4ilQj4l8O6x4GWefOV5bUk2-r5QnGulqo0TzoLYtaIwiMnftOFGe3F0n32bqG1ds77JejLfx1FvLdTr_k-2eUDiozk5nlkL-yLPtQFaz5U3CatR0jCkVoK6fXma1o7hGRuJEaD7QX7QsxJWn0fWEPbIemSpntgFOGv_R2bEBPZuzYLYvSJP7gsiBz4r2JKJiB4yuSTYkSoG4dIcPQCUkQIn4JbP40gvll'
+    image: 'https://images.unsplash.com/photo-1544145945-f904253d0c7b?auto=format&fit=crop&q=80&w=800',
+    ownerId: 'system',
+    ingredients: [],
+    instructions: []
   }
 ];
 
@@ -46,11 +77,11 @@ export default function Home() {
       if (data.length > 0) {
         setRecipes(data.slice(0, 3));
       } else {
-        setRecipes(MOCK_RECIPES as any);
+        setRecipes(MOCK_RECIPES);
       }
     } catch (error) {
       console.error('Error loading recent recipes:', error);
-      setRecipes(MOCK_RECIPES as any);
+      setRecipes(MOCK_RECIPES);
     } finally {
       setLoading(false);
     }
@@ -78,9 +109,10 @@ export default function Home() {
         >
           <div className="absolute inset-0 z-0">
             <img 
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuAx1FI3Ru7GhZX_vE5YLQy4EyyIqx_8mPJwXKXcTzR0izS8LJ54dkw0DQiCTVs2E2JIYks3we2gTCZ3mM0CE8oxv3dEcHrD--zX1R90nKaK5EYehdNnLEOdwC2ihUXkYKCoVXlSxSTxsZ_lPaBrCP6QM5NhdyWg9NstdRhcz507MZ_Rt2Btteofcw3ydNvc8Gh8AOz65rDaRyTvMYvZjKmERKuaPLhj3F3_sAbxhzP-C6MUjQYMod5eZgoyWyrd17kTn404sFxoVWk4" 
+              src="https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&q=80&w=1200" 
               alt="Featured Recipe" 
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              referrerPolicy="no-referrer"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-stone-900/80 via-stone-900/40 to-transparent"></div>
           </div>
@@ -129,18 +161,21 @@ export default function Home() {
             </Link>
           </div>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
           {CATEGORIES.map((cat, i) => (
-            <motion.div 
-              key={i}
-              whileHover={{ y: -5 }}
+            <Link 
+              key={i} 
+              to={`/explore?category=${encodeURIComponent(cat.name)}`}
               className="group flex flex-col items-center gap-4 cursor-pointer"
             >
-              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-transparent group-hover:border-primary transition-all duration-300 p-1 bg-surface-container shadow-inner">
-                <img src={cat.img} alt={cat.name} className="w-full h-full object-cover rounded-full" />
-              </div>
-              <span className="text-xl font-semibold text-on-surface group-hover:text-primary transition-colors">{cat.name}</span>
-            </motion.div>
+              <motion.div 
+                whileHover={{ y: -5 }}
+                className="w-32 h-32 rounded-full overflow-hidden border-4 border-transparent group-hover:border-primary transition-all duration-300 p-1 bg-surface-container shadow-inner"
+              >
+                <img src={cat.img} alt={cat.name} className="w-full h-full object-cover rounded-full" referrerPolicy="no-referrer" />
+              </motion.div>
+              <span className="text-xl font-semibold text-on-surface group-hover:text-primary transition-colors text-center">{cat.name}</span>
+            </Link>
           ))}
         </div>
       </section>
@@ -162,52 +197,55 @@ export default function Home() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {recipes.map((recipe, i) => (
-              <Link key={recipe.id || i} to={`/recipe/${recipe.id}`}>
-                <motion.article 
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
-                  className="group bg-surface-container-low rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 cursor-pointer h-full border border-stone-100"
-                >
-                  <div className="aspect-[4/3] overflow-hidden relative bg-stone-200">
-                    {recipe.image ? (
-                      <img 
-                      src={recipe.image} 
-                      alt={recipe.title} 
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
-                    />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-stone-400 font-bold uppercase text-xs">
-                        Alquimia
-                      </div>
-                    )}
-                    <button className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/90 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-colors shadow-sm">
-                      <Heart className="w-5 h-5" />
-                    </button>
-                  </div>
-                  <div className="p-6">
-                    <div className="flex gap-2 mb-3">
-                      <span className={`px-3 py-0.5 rounded-full text-[12px] font-bold tracking-wider uppercase ${getTagColor(recipe.category)}`}>
-                        {recipe.category}
-                      </span>
+              <div key={recipe.id || i} className="relative group">
+                <Link to={`/recipe/${recipe.id}`}>
+                  <motion.article 
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.1 }}
+                    className="group bg-surface-container-low rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 cursor-pointer h-full border border-stone-100"
+                  >
+                    <div className="aspect-[4/3] overflow-hidden relative bg-stone-200">
+                      {recipe.image ? (
+                        <img 
+                        src={recipe.image} 
+                        alt={recipe.title} 
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                        referrerPolicy="no-referrer"
+                      />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-stone-400 font-bold uppercase text-xs">
+                          Alquimia
+                        </div>
+                      )}
                     </div>
-                    <h3 className="text-2xl font-bold text-on-surface mb-4 group-hover:text-primary transition-colors leading-snug line-clamp-1">
-                      {recipe.title}
-                    </h3>
-                    <div className="flex items-center justify-between text-on-surface-variant font-semibold text-sm">
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4" />
-                        {recipe.time || 'N/A'}
+                    <div className="p-6">
+                      <div className="flex gap-2 mb-3">
+                        <span className={`px-3 py-0.5 rounded-full text-[12px] font-bold tracking-wider uppercase ${getTagColor(recipe.category)}`}>
+                          {recipe.category}
+                        </span>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                        {recipe.rating?.toFixed(1) || '0.0'} ({recipe.reviewsCount || 0})
+                      <h3 className="text-2xl font-bold text-on-surface mb-4 group-hover:text-primary transition-colors leading-snug line-clamp-1">
+                        {recipe.title}
+                      </h3>
+                      <div className="flex items-center justify-between text-on-surface-variant font-semibold text-sm">
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4" />
+                          {recipe.time || 'N/A'}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                          {recipe.rating?.toFixed(1) || '0.0'} ({recipe.reviewsCount || 0})
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </motion.article>
-              </Link>
+                  </motion.article>
+                </Link>
+                <button className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/90 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-colors shadow-sm z-10">
+                  <Heart className="w-5 h-5" />
+                </button>
+              </div>
             ))}
           </div>
         )}
@@ -218,9 +256,10 @@ export default function Home() {
         <div className="px-12 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
           <div className="rounded-2xl overflow-hidden shadow-2xl">
             <img 
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBQFfXNftAiRWd3JqLPpA43bf_SAjc3SaZxkWtId8qrj4pJ74LjSnenC2vlyOWHFr7nceW4HAzT8vWEHpiQYm2p_w14c5XRyrHSxd-oE-6CkkZhSKv6dknmla9mOflF5bT3N6lyLhhDpIa7gVF2Zt0XeNxZICYsIwr6xBK2Ka4mabWPT5ZYSExJe8nVVVW3vbMbiSt9yvTVl5K3x0HN1Pf46Ap2k-hMewG2ZMmS-N-1gJs_F4ePS2E8W6MoWnt2pgDyIbqZ9nF0VTYC" 
+              src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&q=80&w=800" 
               alt="Community" 
               className="w-full h-[400px] object-cover"
+              referrerPolicy="no-referrer"
             />
           </div>
           <div className="space-y-6">

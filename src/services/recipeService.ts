@@ -47,8 +47,8 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
     operationType,
     path
   };
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
+  console.error('Firestore Error Details:', errInfo);
+  throw new Error(`Firestore operation failed: ${errInfo.error}`);
 }
 
 export interface Recipe {
@@ -124,12 +124,25 @@ export const recipeService = {
 
   async getAllRecipes(): Promise<Recipe[]> {
     try {
+      // Try with ordering first
       const q = query(collection(db, RECIPES_COLLECTION), orderBy('createdAt', 'desc'));
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Recipe));
     } catch (error) {
-      handleFirestoreError(error, OperationType.LIST, RECIPES_COLLECTION);
-      return [];
+      console.warn('Query with orderBy failed, falling back to unordered fetch:', error);
+      try {
+        // Fallback to unordered fetch and sort in memory
+        const querySnapshot = await getDocs(collection(db, RECIPES_COLLECTION));
+        const recipes = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Recipe));
+        return recipes.sort((a, b) => {
+          const dateA = a.createdAt?.toDate?.() ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+          const dateB = b.createdAt?.toDate?.() ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+          return dateB.getTime() - dateA.getTime();
+        });
+      } catch (innerError) {
+        handleFirestoreError(innerError, OperationType.LIST, RECIPES_COLLECTION);
+        return [];
+      }
     }
   },
 
@@ -143,8 +156,14 @@ export const recipeService = {
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Recipe));
     } catch (error) {
-      handleFirestoreError(error, OperationType.LIST, RECIPES_COLLECTION);
-      return [];
+      console.warn('Categorized query with orderBy failed, falling back to client-side filter:', error);
+      try {
+        const recipes = await this.getAllRecipes();
+        return recipes.filter(r => r.category === category);
+      } catch (innerError) {
+        handleFirestoreError(innerError, OperationType.LIST, RECIPES_COLLECTION);
+        return [];
+      }
     }
   }
 };

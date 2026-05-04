@@ -259,7 +259,7 @@ export default function Submit() {
             </div>
             {formData.image && (
               <div className="aspect-video w-full rounded-2xl overflow-hidden shadow-inner bg-stone-100 border border-stone-200">
-                <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
+                <img src={formData.image} alt="Preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
               </div>
             )}
             {!formData.image && (
