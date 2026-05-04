@@ -1,8 +1,8 @@
 import { ReactNode, useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Search, Bookmark, User, Share2, Mail, LogOut, LogIn } from 'lucide-react';
+import { Search, Bookmark, User, Share2, Mail, LogOut, LogIn, X } from 'lucide-react';
 import { auth } from '../lib/firebase';
-import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, User as FirebaseUser } from 'firebase/auth';
+import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, User as FirebaseUser, browserPopupRedirectResolver } from 'firebase/auth';
 
 interface LayoutProps {
   children: ReactNode;
@@ -11,6 +11,7 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -20,11 +21,20 @@ export default function Layout({ children }: LayoutProps) {
   }, []);
 
   const handleLogin = async () => {
+    setAuthError(null);
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
-    } catch (error) {
+      // Use browserPopupRedirectResolver to improve compatibility in iframe/popup environments
+      await signInWithPopup(auth, provider, browserPopupRedirectResolver);
+    } catch (error: any) {
       console.error('Login error:', error);
+      if (error.code === 'auth/popup-blocked') {
+        setAuthError('O popup foi bloqueado pelo seu navegador. Por favor, permita popups para este site.');
+      } else if (error.code === 'auth/cancelled-popup-request' || error.code === 'auth/popup-closed-by-user') {
+        // Just user closing the popup, no need to show a big error unless it's persistent
+      } else {
+        setAuthError(`Erro ao entrar: ${error.message}. Verifique se o domínio está autorizado no console do Firebase.`);
+      }
     }
   };
 
@@ -44,6 +54,16 @@ export default function Layout({ children }: LayoutProps) {
 
   return (
     <div className="min-h-screen bg-background selection:bg-secondary-container selection:text-secondary">
+      {/* Error Banner */}
+      {authError && (
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[60] bg-red-50 text-red-600 px-6 py-3 rounded-2xl border border-red-100 shadow-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300">
+          <span className="text-sm font-semibold">{authError}</span>
+          <button onClick={() => setAuthError(null)} className="p-1 hover:bg-red-100 rounded-full transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Navbar */}
       <nav className="fixed top-0 w-full z-50 glass">
         <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
