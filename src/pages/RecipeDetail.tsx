@@ -12,7 +12,10 @@ const MOCK_RECIPES_DETAIL: Record<string, Recipe> = {
     id: 'tapioca-rendada',
     title: 'Tapioca Rendada com Queijo Coalho',
     description: 'Uma versão gourmet da tradicional tapioca, com uma crosta crocante de queijo que derrete na boca.',
-    category: 'Café da Manhã',
+    momento: ['Café da Manhã'],
+    tipo_prato: ['Grelhados'],
+    base_alimento: ['Ovos e Laticínios'],
+    origem: 'Brasileira',
     time: '12 min',
     difficulty: 'Fácil',
     servings: '1',
@@ -40,7 +43,10 @@ const MOCK_RECIPES_DETAIL: Record<string, Recipe> = {
     id: 'feijoada-completa',
     title: 'Feijoada Completa Tradicional',
     description: 'O prato mais emblemático do Brasil, preparado com carnes selecionadas e cozido lentamente para atingir perfeição.',
-    category: 'Almoço',
+    momento: ['Almoço'],
+    tipo_prato: ['Cozidos / Guisados'],
+    base_alimento: ['Carnes'],
+    origem: 'Brasileira',
     time: '3h 00min',
     difficulty: 'Médio',
     servings: '6',
@@ -70,7 +76,10 @@ const MOCK_RECIPES_DETAIL: Record<string, Recipe> = {
     id: 'salmao-ervas',
     title: 'Salmão com Crosta de Ervas',
     description: 'Uma opção leve e sofisticada para o jantar. O salmão suculento contrasta perfeitamente com a crosta de ervas e cítricos.',
-    category: 'Jantar',
+    momento: ['Jantar'],
+    tipo_prato: ['Assados'],
+    base_alimento: ['Frutos do Mar'],
+    origem: 'Europeia',
     time: '25 min',
     difficulty: 'Fácil',
     servings: '2',
@@ -98,7 +107,10 @@ const MOCK_RECIPES_DETAIL: Record<string, Recipe> = {
     id: 'pudim-leite',
     title: 'Pudim de Leite Condensado',
     description: 'O clássico dos domingos brasileiros. Textura aveludada, sem furinhos (ou com, se preferir!) e uma calda de caramelo brilhante.',
-    category: 'Sobremesas',
+    momento: ['Lanche / Chá da Tarde'],
+    tipo_prato: ['Assados'],
+    base_alimento: ['Ovos e Laticínios'],
+    origem: 'Brasileira',
     time: '1h 30min',
     difficulty: 'Médio',
     servings: '8',
@@ -447,8 +459,17 @@ export default function RecipeDetail() {
                 <Gauge className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-xs text-on-surface-variant font-bold uppercase tracking-wider text-[10px]">Dificuldade</p>
-                <p className="font-semibold text-sm">{recipe.difficulty || 'Médio'}</p>
+                <p className="text-xs text-on-surface-variant font-bold uppercase tracking-wider text-[10px]">Origem</p>
+                <p className="font-semibold text-sm">{recipe.origem || 'Brasileira'}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary">
+                <Utensils className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-xs text-on-surface-variant font-bold uppercase tracking-wider text-[10px]">Custo</p>
+                <p className="font-semibold text-sm">{recipe.custo_estimado || '$$'}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">

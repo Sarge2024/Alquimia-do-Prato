@@ -9,7 +9,7 @@ const CATEGORIES = [
   { name: 'Café da Manhã', icon: Coffee, img: 'https://images.unsplash.com/photo-1493770348161-369560ae357d?auto=format&fit=crop&q=80&w=800' },
   { name: 'Almoço', icon: Soup, img: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&q=80&w=800' },
   { name: 'Jantar', icon: Pizza, img: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&q=80&w=800' },
-  { name: 'Cocktail', icon: GlassWater, img: 'https://images.unsplash.com/photo-1541529086526-db283c563270?auto=format&fit=crop&q=80&w=800' },
+  { name: 'Bebidas', icon: GlassWater, img: 'https://images.unsplash.com/photo-1541529086526-db283c563270?auto=format&fit=crop&q=80&w=800' },
   { name: 'Sobremesas', icon: Cake, img: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&q=80&w=800' },
 ];
 
@@ -17,7 +17,9 @@ const MOCK_RECIPES: Recipe[] = [
   {
     id: 'tapioca-rendada',
     title: 'Tapioca Rendada com Queijo Coalho',
-    category: 'Café da Manhã',
+    momento: ['Café da Manhã'],
+    tipo_prato: ['Grelhados'],
+    base_alimento: ['Ovos e Laticínios'],
     time: '12 min',
     rating: 4.9,
     reviewsCount: 45,
@@ -30,7 +32,9 @@ const MOCK_RECIPES: Recipe[] = [
   {
     id: 'feijoada-completa',
     title: 'Feijoada Completa Tradicional',
-    category: 'Almoço',
+    momento: ['Almoço'],
+    tipo_prato: ['Cozidos / Guisados'],
+    base_alimento: ['Carnes'],
     time: '3h 00min',
     rating: 5.0,
     reviewsCount: 128,
@@ -43,7 +47,9 @@ const MOCK_RECIPES: Recipe[] = [
   {
     id: 'salmao-ervas',
     title: 'Salmão com Crosta de Ervas',
-    category: 'Jantar',
+    momento: ['Jantar'],
+    tipo_prato: ['Assados'],
+    base_alimento: ['Frutos do Mar'],
     time: '25 min',
     rating: 4.8,
     reviewsCount: 67,
@@ -152,7 +158,7 @@ export default function Home() {
           {CATEGORIES.map((cat, i) => (
             <Link 
               key={i} 
-              to={`/explore?category=${encodeURIComponent(cat.name)}`}
+              to={`/explore?momento=${encodeURIComponent(cat.name)}`}
               className="group flex items-center md:flex-col gap-4 cursor-pointer p-3 md:p-0 rounded-2xl bg-surface-container-low md:bg-transparent border border-stone-100 md:border-0 hover:border-primary/30 transition-all"
             >
               <div className="md:hidden w-12 h-12 flex-shrink-0 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">

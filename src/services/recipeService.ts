@@ -62,13 +62,17 @@ export interface Recipe {
   title: string;
   description?: string;
   image?: string;
-  category: string;
+  momento: string[];
+  tipo_prato: string[];
+  base_alimento: string[];
+  origem?: string;
   time?: string;
-  prepTime?: string; // Tempo de Preparação
-  dietType?: string; // Tipo de Dieta
+  prepTime?: string;
+  dietType?: string;
   servings?: string;
   difficulty?: string;
-  ingredients: (string | Ingredient)[]; // Maintain string support for backward compatibility/simplicity
+  custo_estimado?: string;
+  ingredients: (string | Ingredient)[];
   instructions: string[];
   ownerId: string;
   createdAt?: any;
@@ -154,20 +158,20 @@ export const recipeService = {
     }
   },
 
-  async getRecipesByCategory(category: string): Promise<Recipe[]> {
+  async getRecipesByMomento(momento: string): Promise<Recipe[]> {
     try {
       const q = query(
         collection(db, RECIPES_COLLECTION), 
-        where('category', '==', category),
+        where('momento', 'array-contains', momento),
         orderBy('createdAt', 'desc')
       );
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Recipe));
     } catch (error) {
-      console.warn('Categorized query with orderBy failed, falling back to client-side filter:', error);
+      console.warn('Momento query with orderBy failed, falling back to client-side filter:', error);
       try {
         const recipes = await this.getAllRecipes();
-        return recipes.filter(r => r.category === category);
+        return recipes.filter(r => r.momento && r.momento.includes(momento));
       } catch (innerError) {
         handleFirestoreError(innerError, OperationType.LIST, RECIPES_COLLECTION);
         return [];
@@ -201,9 +205,13 @@ export const recipeService = {
       {
         title: 'Tapioca Rendada com Queijo Coalho',
         description: 'Uma versão gourmet da tradicional tapioca, com uma crosta crocante de queijo que derrete na boca.',
-        category: 'Café da Manhã',
+        momento: ['Café da Manhã'],
+        tipo_prato: ['Grelhados'],
+        base_alimento: ['Ovos e Laticínios', 'Grãos e Leguminosas'],
+        origem: 'Brasileira',
         time: '12 min',
         difficulty: 'Fácil',
+        custo_estimado: '$',
         servings: '1',
         rating: 4.9,
         reviewsCount: 45,
@@ -227,9 +235,13 @@ export const recipeService = {
       {
         title: 'Feijoada Completa Tradicional',
         description: 'O prato mais emblemático do Brasil, preparado com carnes selecionadas e cozido lentamente para atingir perfeição.',
-        category: 'Almoço',
+        momento: ['Almoço'],
+        tipo_prato: ['Cozidos / Guisados'],
+        base_alimento: ['Carnes', 'Grãos e Leguminosas'],
+        origem: 'Brasileira',
         time: '3h 00min',
         difficulty: 'Médio',
+        custo_estimado: '$$',
         servings: '6',
         rating: 5.0,
         reviewsCount: 128,
@@ -255,9 +267,13 @@ export const recipeService = {
       {
         title: 'Salmão com Crosta de Ervas',
         description: 'Uma opção leve e sofisticada para o jantar. O salmão suculento contrasta perfeitamente com a crosta de ervas e cítricos.',
-        category: 'Jantar',
+        momento: ['Jantar'],
+        tipo_prato: ['Assados'],
+        base_alimento: ['Frutos do Mar'],
+        origem: 'Europeia',
         time: '25 min',
         difficulty: 'Fácil',
+        custo_estimado: '$$$',
         servings: '2',
         rating: 4.8,
         reviewsCount: 67,
@@ -281,9 +297,13 @@ export const recipeService = {
       {
         title: 'Pudim de Leite Condensado',
         description: 'O clássico dos domingos brasileiros. Textura aveludada, sem furinhos e uma calda de caramelo brilhante.',
-        category: 'Sobremesas',
+        momento: ['Lanche / Chá da Tarde', 'Ceia'],
+        tipo_prato: ['Assados'],
+        base_alimento: ['Ovos e Laticínios'],
+        origem: 'Brasileira',
         time: '1h 30min',
         difficulty: 'Médio',
+        custo_estimado: '$',
         servings: '8',
         rating: 4.9,
         reviewsCount: 210,

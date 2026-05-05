@@ -9,7 +9,7 @@ interface RecipeCardProps {
 }
 
 export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
-  const { id, title, image, time, difficulty, rating, reviewsCount, category } = recipe;
+  const { id, title, image, time, difficulty, rating, reviewsCount, momento, custo_estimado } = recipe;
 
   return (
     <motion.div
@@ -26,10 +26,17 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
           alt={title}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
         />
-        <div className="absolute top-4 left-4">
-          <span className="px-3 py-1 bg-white/90 backdrop-blur-md text-primary text-xs font-bold rounded-full shadow-sm">
-            {category}
-          </span>
+        <div className="absolute top-4 left-4 flex flex-wrap gap-2">
+          {momento && momento.length > 0 && (
+            <span className="px-3 py-1 bg-white/90 backdrop-blur-md text-primary text-[10px] font-bold rounded-full shadow-sm uppercase tracking-wider">
+              {momento[0]}
+            </span>
+          )}
+          {custo_estimado && (
+            <span className="px-2 py-1 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold rounded-lg shadow-sm">
+              {custo_estimado}
+            </span>
+          )}
         </div>
         {rating && (
           <div className="absolute bottom-4 right-4 px-2 py-1 bg-primary text-white text-xs font-bold rounded-lg flex items-center gap-1 shadow-lg">

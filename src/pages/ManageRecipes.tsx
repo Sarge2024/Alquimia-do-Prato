@@ -199,7 +199,7 @@ export default function ManageRecipes() {
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-3 mb-2">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                    {recipe.category}
+                    {recipe.momento && recipe.momento[0]}
                   </span>
                   <div className="flex items-center gap-1.5 text-xs text-on-surface-variant font-semibold">
                     <Clock className="w-3.5 h-3.5" /> {recipe.time || 'N/A'}

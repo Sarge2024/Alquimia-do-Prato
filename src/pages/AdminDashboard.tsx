@@ -58,7 +58,7 @@ export default function AdminDashboard() {
 
   const filteredRecipes = recipes.filter(r => 
     r.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    r.category?.toLowerCase().includes(searchTerm.toLowerCase())
+    (r.momento && r.momento[0]?.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   if (loading) {
@@ -138,7 +138,7 @@ export default function AdminDashboard() {
                   </td>
                   <td className="px-8 py-6">
                     <span className="px-3 py-1 rounded-full bg-stone-100 text-on-surface-variant text-xs font-bold uppercase tracking-wider">
-                      {recipe.category}
+                      {recipe.momento && recipe.momento[0]}
                     </span>
                   </td>
                   <td className="px-8 py-6">

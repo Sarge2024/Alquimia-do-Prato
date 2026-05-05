@@ -19,19 +19,24 @@ export const geminiService = {
       2. MEDIDAS: Converta unidades imperiais (cups, oz, °F) para métricas (ml, g, °C) ou medidas comuns no Brasil (xícaras, colheres).
       
       REGRAS ESTRITAS DE RETORNO (JSON):
-      - title, description, category (USE EXATAMENTE UMA DESTAS: 'Café da Manhã', 'Almoço', 'Jantar', 'Sobremesas', 'Cocktail', 'Bebidas').
+      - title, description.
+      - momento (string[]): USE APENAS: 'Café da Manhã', 'Brunch', 'Almoço', 'Lanche / Chá da Tarde', 'Jantar', 'Ceia', 'Petiscos / Aperitivos', 'Bebidas'. (Pode ser mais de um).
+      - tipo_prato (string[]): USE APENAS: 'Assados', 'Frituras', 'Grelhados', 'Sopas e Caldos', 'Cremes e Purés', 'Massas e Risotos', 'Saladas e Pratos Frios', 'Cozidos / Guisados', 'Padaria e Pastelaria', 'Bebidas'.
+      - base_alimento (string[]): USE APENAS: 'Carnes', 'Frutos do Mar', 'Vegetais e Legumes', 'Ovos e Laticínios', 'Grãos e Leguminosas'.
+      - origem (string): USE PREFERENCIALMENTE: 'Latino-Americana', 'Brasileira', 'Mexicana', 'Argentina', 'Asiática', 'Japonesa', 'Chinesa', 'Tailandesa', 'Coreana', 'Indiana', 'Europeia', 'Italiana', 'Francesa', 'Portuguesa', 'Espanhola', 'Árabe / Médio Oriente', 'Americana'.
+      - custo_estimado (string): USE: '$', '$$', '$$$', '$$$$'.
       - time (string): TEMPO TOTAL (ex: '45 min').
       - prepTime (string): TEMPO DE PREPARAÇÃO (ex: '15 min').
       - dietType (string): TIPO DE DIETA (USE EXATAMENTE UMA DESTAS: 'Convencional', 'Vegana', 'Vegetariana', 'Low Carb', 'Keto', 'Sem Glúten', 'Fit'). Se não houver restrição clara, use 'Convencional'.
-      - difficulty (Fácil, Médio, Avançado), servings.
+      - difficulty (Fácil, Médio, Difícil), servings.
       - ingredients (objeto[] com name e quantity). Quantidade nunca vazia (use "a gosto" se necessário).
       - instructions (string[]).
       - image, imageOptions (string[]).
     `;
 
     const contentPrompt = isUrlOnly 
-      ? `Acesse e pesquise os detalhes da receita no seguinte link: ${options.url}. Se for um petisco, quitute ou acompanhamento para coffee break, classifique como 'Cocktail'. Use ferramentas de busca se necessário para encontrar o conteúdo completo.`
-      : `Extraia do seguinte HTML: ${html.substring(0, 12000)}. Se for um petisco, quitute ou acompanhamento para coffee break, classifique como 'Cocktail'.`;
+      ? `Acesse e pesquise os detalhes da receita no seguinte link: ${options.url}. Se for um petisco, quitute ou acompanhamento para coffee break, classifique como 'Petiscos / Aperitivos'. Use ferramentas de busca se necessário para encontrar o conteúdo completo.`
+      : `Extraia do seguinte HTML: ${html.substring(0, 12000)}. Se for um petisco, quitute ou acompanhamento para coffee break, classifique como 'Petiscos / Aperitivos'.`;
 
     const prompt = `
       ${basePrompt}
@@ -61,10 +66,26 @@ export const geminiService = {
       result.title = String(result.title || "").substring(0, 300);
       result.description = String(result.description || "").substring(0, 5000);
       
-      const categories = ['Café da Manhã', 'Almoço', 'Jantar', 'Sobremesas', 'Cocktail', 'Bebidas'];
-      if (!categories.includes(result.category)) {
-        result.category = "Almoço";
-      }
+      const ALL_MOMENTOS = ['Café da Manhã', 'Brunch', 'Almoço', 'Lanche / Chá da Tarde', 'Jantar', 'Ceia', 'Petiscos / Aperitivos', 'Bebidas'];
+      result.momento = Array.isArray(result.momento) 
+        ? result.momento.filter((m: string) => ALL_MOMENTOS.includes(m))
+        : [];
+      if (result.momento.length === 0) result.momento = ["Almoço"];
+
+      const ALL_TIPOS = ["Assados", "Frituras", "Grelhados", "Sopas e Caldos", "Cremes e Purés", "Massas e Risotos", "Saladas e Pratos Frios", "Cozidos / Guisados", "Padaria e Pastelaria", "Bebidas"];
+      result.tipo_prato = Array.isArray(result.tipo_prato)
+        ? result.tipo_prato.filter((t: string) => ALL_TIPOS.includes(t))
+        : [];
+      if (result.tipo_prato.length === 0) result.tipo_prato = ["Cozidos / Guisados"];
+
+      const ALL_BASES = ["Carnes", "Frutos do Mar", "Vegetais e Legumes", "Ovos e Laticínios", "Grãos e Leguminosas"];
+      result.base_alimento = Array.isArray(result.base_alimento)
+        ? result.base_alimento.filter((b: string) => ALL_BASES.includes(b))
+        : [];
+      if (result.base_alimento.length === 0) result.base_alimento = ["Vegetais e Legumes"];
+
+      result.origem = String(result.origem || "Brasileira");
+      result.custo_estimado = ["$", "$$", "$$$", "$$$$"].includes(result.custo_estimado) ? result.custo_estimado : "$$";
       
       const dietTypes = ['Convencional', 'Vegana', 'Vegetariana', 'Low Carb', 'Keto', 'Sem Glúten', 'Fit'];
       if (!dietTypes.includes(result.dietType)) {
@@ -75,7 +96,7 @@ export const geminiService = {
       result.prepTime = String(result.prepTime || "");
       result.servings = String(result.servings || "");
       result.difficulty = result.difficulty || "Médio";
-      if (!['Fácil', 'Médio', 'Avançado'].includes(result.difficulty)) {
+      if (!['Fácil', 'Médio', 'Difícil'].includes(result.difficulty)) {
         result.difficulty = "Médio";
       }
       

@@ -8,12 +8,32 @@
         "title": { "type": "string", "description": "Título da receita" },
         "description": { "type": "string", "description": "Breve descrição ou história da receita" },
         "image": { "type": "string", "description": "URL da imagem da receita" },
-        "category": { "type": "string", "enum": ["Café da Manhã", "Almoço", "Jantar", "Sobremesas", "Bebidas", "Cocktail"], "description": "Categoria da receita" },
+        "momento": { 
+          "type": "array", 
+          "items": { "type": "string", "enum": ["Café da Manhã", "Brunch", "Almoço", "Lanche / Chá da Tarde", "Jantar", "Ceia", "Petiscos / Aperitivos", "Bebidas"] },
+          "description": "Momentos de consumo ideais" 
+        },
+        "tipo_prato": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["Assados", "Frituras", "Grelhados", "Sopas e Caldos", "Cremes e Purés", "Massas e Risotos", "Saladas e Pratos Frios", "Cozidos / Guisados", "Padaria e Pastelaria", "Bebidas"] },
+          "description": "Categoria e Técnica dominante"
+        },
+        "base_alimento": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["Carnes", "Frutos do Mar", "Vegetais e Legumes", "Ovos e Laticínios", "Grãos e Leguminosas"] },
+          "description": "Ingrediente principal ou base"
+        },
+        "origem": { 
+          "type": "string", 
+          "enum": ["Latino-Americana", "Brasileira", "Mexicana", "Argentina", "Asiática", "Japonesa", "Chinesa", "Tailandesa", "Coreana", "Indiana", "Europeia", "Italiana", "Francesa", "Portuguesa", "Espanhola", "Árabe / Médio Oriente", "Americana"],
+          "description": "Origem cultural/geográfica" 
+        },
         "time": { "type": "string", "description": "Tempo total (ex: 45 min)" },
         "prepTime": { "type": "string", "description": "Tempo de preparação (ex: 15 min)" },
         "dietType": { "type": "string", "enum": ["Convencional", "Vegana", "Vegetariana", "Low Carb", "Keto", "Sem Glúten", "Fit"], "description": "Classificação da dieta" },
         "servings": { "type": "string", "description": "Número de porções" },
-        "difficulty": { "type": "string", "enum": ["Fácil", "Médio", "Avançado"], "description": "Nível de dificuldade" },
+        "difficulty": { "type": "string", "enum": ["Fácil", "Médio", "Difícil"], "description": "Nível de dificuldade" },
+        "custo_estimado": { "type": "string", "enum": ["$", "$$", "$$$", "$$$$"], "description": "Custo estimado" },
         "ingredients": { "type": "array", "items": { "type": "string" }, "description": "Lista de ingredientes" },
         "instructions": { "type": "array", "items": { "type": "string" }, "description": "Passos do modo de preparo" },
         "ownerId": { "type": "string", "description": "UID do usuário que criou a receita" },
@@ -22,7 +42,7 @@
         "rating": { "type": "number", "description": "Avaliação média" },
         "reviewsCount": { "type": "number", "description": "Número de avaliações" }
       },
-      "required": ["title", "category", "ingredients", "instructions", "ownerId"]
+      "required": ["title", "momento", "tipo_prato", "base_alimento", "ingredients", "instructions", "ownerId"]
     }
   },
   "firestore": {

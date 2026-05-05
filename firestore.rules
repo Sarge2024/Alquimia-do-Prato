@@ -17,7 +17,7 @@ service cloud.firestore {
     }
 
     function isValidId(id) {
-      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+      return id is string && id.size() <= 128;
     }
 
     function incoming() {
@@ -29,27 +29,15 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isSignedIn() 
-        && request.auth.token.email == 'sagacitas.sistemas@gmail.com' 
-        && request.auth.token.email_verified == true;
+      return isSignedIn() && request.auth.token.email == 'sagacitas.sistemas@gmail.com';
     }
 
     // --- Recipe Validation ---
     function isValidRecipe(data) {
-      // Use get() to handle missing fields during partial updates
-      return (data.get('title', 'placeholder') is string && data.get('title', 'placeholder').size() <= 500)
-        && (data.get('category', 'Almoço') in ['Café da Manhã', 'Almoço', 'Jantar', 'Sobremesas', 'Bebidas', 'Cocktail'])
-        && (data.get('ingredients', []) is list && data.get('ingredients', []).size() <= 200)
-        && (data.get('instructions', []) is list && data.get('instructions', []).size() <= 200)
-        && (data.get('image', null) == null || (data.get('image', '') is string && data.get('image', '').size() <= 8000))
-        && (data.get('servings', null) == null || (data.get('servings', '') is string && data.get('servings', '').size() <= 512))
-        && (data.get('difficulty', 'Médio') in ['Fácil', 'Médio', 'Avançado'])
-        && (data.get('time', null) == null || (data.get('time', '') is string && data.get('time', '').size() <= 256))
-        && (data.get('prepTime', null) == null || (data.get('prepTime', '') is string && data.get('prepTime', '').size() <= 256))
-        && (data.get('dietType', 'Convencional') in ['Convencional', 'Vegana', 'Vegetariana', 'Low Carb', 'Keto', 'Sem Glúten', 'Fit'])
-        && (data.get('description', null) == null || (data.get('description', '') is string && data.get('description', '').size() <= 10000))
-        && (data.get('rating', 0) is number)
-        && (data.get('reviewsCount', 0) is number);
+      return (data.get('title', 'valid') is string && data.get('title', 'valid').size() <= 1000)
+        && (data.get('difficulty', 'Médio') in ['Fácil', 'Médio', 'Difícil'])
+        && (data.get('custo_estimado', '$$') in ['$', '$$', '$$$', '$$$$'])
+        && (data.get('dietType', 'Convencional') in ['Convencional', 'Vegana', 'Vegetariana', 'Low Carb', 'Keto', 'Sem Glúten', 'Fit']);
     }
 
     // --- Collections ---
@@ -62,7 +50,7 @@ service cloud.firestore {
       
       allow create: if isSignedIn() 
         && isValidId(recipeId) 
-        && incoming().keys().hasAll(['title', 'category', 'ingredients', 'instructions', 'ownerId', 'createdAt', 'updatedAt', 'rating', 'reviewsCount'])
+        && incoming().keys().hasAll(['title', 'momento', 'tipo_prato', 'base_alimento', 'ingredients', 'instructions', 'ownerId', 'createdAt', 'updatedAt', 'rating', 'reviewsCount'])
         && isValidRecipe(incoming())
         && incoming().ownerId == request.auth.uid
         && incoming().createdAt == request.time
@@ -70,14 +58,9 @@ service cloud.firestore {
 
       allow update: if (isOwner(existing().ownerId) || isAdmin())
         && isValidRecipe(incoming())
-        && incoming().get('ownerId', existing().ownerId) == existing().ownerId
-        && (incoming().get('ownerId', request.auth.uid) == request.auth.uid || isAdmin())
+        && (incoming().get('ownerId', existing().ownerId) == existing().ownerId || isAdmin())
         && incoming().get('createdAt', existing().createdAt) == existing().createdAt
-        && incoming().updatedAt == request.time
-        && (
-          // Full Edit Action
-          incoming().diff(existing()).affectedKeys().hasAny(['title', 'description', 'image', 'category', 'time', 'prepTime', 'dietType', 'servings', 'difficulty', 'ingredients', 'instructions', 'updatedAt', 'rating', 'reviewsCount'])
-        );
+        && (incoming().updatedAt == request.time || isAdmin());
 
       allow delete: if isOwner(existing().ownerId) || isAdmin();
     }

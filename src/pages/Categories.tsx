@@ -27,7 +27,7 @@ const CATEGORIES_DETAILED = [
     img: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&q=80&w=800' 
   },
   { 
-    name: 'Cocktail', 
+    name: 'Petiscos / Aperitivos', 
     desc: 'Petiscos, quitutes e tira-gostos para cofee breaks e recepções.',
     count: '15 receitas',
     img: 'https://images.unsplash.com/photo-1541529086526-db283c563270?auto=format&fit=crop&q=80&w=800' 
@@ -51,7 +51,7 @@ export default function Categories() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {CATEGORIES_DETAILED.map((cat, i) => (
-          <Link key={i} to={`/explore?category=${encodeURIComponent(cat.name)}`}>
+          <Link key={i} to={`/explore?momento=${encodeURIComponent(cat.name)}`}>
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}

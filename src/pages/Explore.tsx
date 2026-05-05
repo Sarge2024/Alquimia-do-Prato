@@ -10,7 +10,10 @@ const MOCK_RECIPES: Recipe[] = [
   {
     id: 'tapioca-rendada',
     title: 'Tapioca Rendada com Queijo Coalho',
-    category: 'Café da Manhã',
+    momento: ['Café da Manhã'],
+    tipo_prato: ['Grelhados'],
+    base_alimento: ['Ovos e Laticínios'],
+    origem: 'Brasileira',
     time: '12 min',
     rating: 4.9,
     reviewsCount: 45,
@@ -23,7 +26,10 @@ const MOCK_RECIPES: Recipe[] = [
   {
     id: 'feijoada-completa',
     title: 'Feijoada Completa Tradicional',
-    category: 'Almoço',
+    momento: ['Almoço'],
+    tipo_prato: ['Cozidos / Guisados'],
+    base_alimento: ['Carnes'],
+    origem: 'Brasileira',
     time: '3h 00min',
     rating: 5.0,
     reviewsCount: 128,
@@ -36,7 +42,10 @@ const MOCK_RECIPES: Recipe[] = [
   {
     id: 'salmao-ervas',
     title: 'Salmão com Crosta de Ervas',
-    category: 'Jantar',
+    momento: ['Jantar'],
+    tipo_prato: ['Assados'],
+    base_alimento: ['Frutos do Mar'],
+    origem: 'Europeia',
     time: '25 min',
     rating: 4.8,
     reviewsCount: 67,
@@ -49,7 +58,10 @@ const MOCK_RECIPES: Recipe[] = [
   {
     id: 'pudim-leite',
     title: 'Pudim de Leite Condensado',
-    category: 'Sobremesas',
+    momento: ['Lanche / Chá da Tarde'],
+    tipo_prato: ['Assados'],
+    base_alimento: ['Ovos e Laticínios'],
+    origem: 'Brasileira',
     time: '1h 30min',
     rating: 4.9,
     reviewsCount: 210,
@@ -75,17 +87,32 @@ export default function Explore() {
   }, []);
 
   useEffect(() => {
-    const category = searchParams.get('category');
+    const momento = searchParams.get('momento');
+    const technique = searchParams.get('technique');
+    const base = searchParams.get('base');
     const diet = searchParams.get('diet');
+    const difficulty = searchParams.get('difficulty');
     
     let filtered = [...recipes];
     
-    if (category) {
-      filtered = filtered.filter(r => r.category === category);
+    if (momento) {
+      filtered = filtered.filter(r => r.momento && r.momento.includes(momento));
+    }
+
+    if (technique) {
+      filtered = filtered.filter(r => r.tipo_prato && r.tipo_prato.includes(technique));
+    }
+
+    if (base) {
+      filtered = filtered.filter(r => r.base_alimento && r.base_alimento.includes(base));
     }
     
     if (diet) {
       filtered = filtered.filter(r => r.dietType === diet);
+    }
+
+    if (difficulty) {
+      filtered = filtered.filter(r => r.difficulty === difficulty);
     }
     
     setFilteredRecipes(filtered);
@@ -108,14 +135,15 @@ export default function Explore() {
     setSearchParams({});
   };
 
-  const getTagColor = (category: string) => {
-    switch (category) {
+  const getMomentoColor = (momento: string) => {
+    switch (momento) {
       case 'Café da Manhã': return 'bg-yellow-100 text-yellow-700';
       case 'Almoço': return 'bg-primary-fixed text-on-primary-fixed';
       case 'Jantar': return 'bg-secondary-container text-on-secondary-container';
-      case 'Cocktail': return 'bg-orange-100 text-orange-700';
-      case 'Bebidas': return 'bg-blue-100 text-blue-700';
-      case 'Sobremesas': return 'bg-pink-100 text-pink-700';
+      case 'Petiscos / Aperitivos': return 'bg-orange-100 text-orange-700';
+      case 'Lanche / Chá da Tarde': return 'bg-blue-100 text-blue-700';
+      case 'Brunch': return 'bg-indigo-100 text-indigo-700';
+      case 'Bebidas': return 'bg-cyan-100 text-cyan-700';
       default: return 'bg-stone-100 text-stone-700';
     }
   };
@@ -159,19 +187,31 @@ export default function Explore() {
           </div>
         </div>
         
-        {categoryFilter && (
-          <div className="mt-6 flex items-center gap-3">
-            <span className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider">Filtrando por:</span>
-            <div className={`px-4 py-1 rounded-full text-sm font-bold flex items-center gap-2 ${getTagColor(categoryFilter)}`}>
-              {categoryFilter}
-              <button 
-                onClick={clearFilter}
-                className="p-0.5 hover:bg-black/10 rounded-full transition-colors"
-                title="Limpar filtro"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+        {searchParams.toString() && (
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <span className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider">Filtros ativos:</span>
+            {Array.from(searchParams.entries()).map(([key, value]) => (
+              <div key={key} className="px-3 py-1 rounded-full bg-stone-100 border border-stone-200 text-xs font-bold flex items-center gap-2">
+                <span className="text-[10px] text-stone-400 uppercase">{key}:</span>
+                {value}
+                <button 
+                  onClick={() => {
+                    const newParams = new URLSearchParams(searchParams);
+                    newParams.delete(key);
+                    setSearchParams(newParams);
+                  }}
+                  className="p-0.5 hover:bg-black/10 rounded-full transition-colors"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+            <button 
+              onClick={clearFilter}
+              className="text-xs font-bold text-primary hover:underline ml-2"
+            >
+              Limpar tudo
+            </button>
           </div>
         )}
       </header>
@@ -184,22 +224,76 @@ export default function Explore() {
               <Filter className="w-5 h-5" /> Filtros
             </h3>
             <div className="space-y-4">
-              {/* Category Filter in Sidebar */}
+              {/* Momento Filter */}
               <div className="p-4 bg-surface-container rounded-xl">
                 <button className="w-full flex items-center justify-between font-semibold">
-                  Categorias <ChevronDown className="w-4 h-4" />
+                  Momento <ChevronDown className="w-4 h-4" />
                 </button>
                 <div className="mt-3 space-y-2 text-sm text-on-surface-variant">
-                  {['Café da Manhã', 'Almoço', 'Jantar', 'Cocktail', 'Sobremesas', 'Bebidas'].map(cat => (
+                  {['Café da Manhã', 'Brunch', 'Almoço', 'Lanche / Chá da Tarde', 'Jantar', 'Ceia', 'Petiscos', 'Bebidas'].map(cat => (
                     <label key={cat} className="flex items-center gap-2 cursor-pointer">
                       <input 
                         type="radio" 
-                        name="category" 
-                        checked={categoryFilter === cat}
-                        onChange={() => setSearchParams({ category: cat })}
+                        name="momento" 
+                        checked={searchParams.get('momento') === cat}
+                        onChange={() => {
+                          const newParams = new URLSearchParams(searchParams);
+                          newParams.set('momento', cat);
+                          setSearchParams(newParams);
+                        }}
                         className="text-primary focus:ring-primary" 
                       />
                       <span>{cat}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Técnica Filter */}
+              <div className="p-4 bg-surface-container rounded-xl">
+                <button className="w-full flex items-center justify-between font-semibold">
+                  Técnica <ChevronDown className="w-4 h-4" />
+                </button>
+                <div className="mt-3 space-y-2 text-sm text-on-surface-variant">
+                  {['Assados', 'Frituras', 'Grelhados', 'Sopas e Caldos', 'Massas e Risotos', 'Bebidas'].map(tech => (
+                    <label key={tech} className="flex items-center gap-2 cursor-pointer">
+                      <input 
+                        type="radio" 
+                        name="technique" 
+                        checked={searchParams.get('technique') === tech}
+                        onChange={() => {
+                          const newParams = new URLSearchParams(searchParams);
+                          newParams.set('technique', tech);
+                          setSearchParams(newParams);
+                        }}
+                        className="text-primary focus:ring-primary" 
+                      />
+                      <span>{tech}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Base Filter */}
+              <div className="p-4 bg-surface-container rounded-xl">
+                <button className="w-full flex items-center justify-between font-semibold">
+                  Base <ChevronDown className="w-4 h-4" />
+                </button>
+                <div className="mt-3 space-y-2 text-sm text-on-surface-variant">
+                  {['Carnes', 'Frutos do Mar', 'Vegetais e Legumes', 'Ovos e Laticínios', 'Grãos and Leguminosas'].map(base => (
+                    <label key={base} className="flex items-center gap-2 cursor-pointer">
+                      <input 
+                        type="radio" 
+                        name="base" 
+                        checked={searchParams.get('base') === base}
+                        onChange={() => {
+                          const newParams = new URLSearchParams(searchParams);
+                          newParams.set('base', base);
+                          setSearchParams(newParams);
+                        }}
+                        className="text-primary focus:ring-primary" 
+                      />
+                      <span>{base}</span>
                     </label>
                   ))}
                 </div>
@@ -237,9 +331,19 @@ export default function Explore() {
                   Dificuldade <ChevronDown className="w-4 h-4" />
                 </button>
                 <div className="mt-3 space-y-2 text-sm text-on-surface-variant">
-                  {['Fácil', 'Médio', 'Avançado'].map(level => (
+                  {['Fácil', 'Médio', 'Difícil'].map(level => (
                     <label key={level} className="flex items-center gap-2 cursor-pointer">
-                      <input type="radio" name="difficulty" className="text-primary focus:ring-primary" />
+                      <input 
+                        type="radio" 
+                        name="difficulty" 
+                        className="text-primary focus:ring-primary" 
+                        checked={searchParams.get('difficulty') === level}
+                        onChange={() => {
+                          const newParams = new URLSearchParams(searchParams);
+                          newParams.set('difficulty', level);
+                          setSearchParams(newParams);
+                        }}
+                      />
                       <span>{level}</span>
                     </label>
                   ))}
@@ -288,9 +392,11 @@ export default function Explore() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
-                                <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-tight ${getTagColor(recipe.category)}`}>
-                                  {recipe.category}
-                                </span>
+                                {recipe.momento && recipe.momento.length > 0 && (
+                                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-tight ${getMomentoColor(recipe.momento[0])}`}>
+                                    {recipe.momento[0]}
+                                  </span>
+                                )}
                                 {recipe.dietType && (
                                   <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-tight ${getDietTagColor(recipe.dietType)}`}>
                                     {recipe.dietType}
