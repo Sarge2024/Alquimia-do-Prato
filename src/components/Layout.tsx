@@ -1,6 +1,6 @@
 import { ReactNode, useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Search, Bookmark, User, Share2, Mail, LogOut, LogIn, X } from 'lucide-react';
+import { Search, Bookmark, User, Share2, Mail, LogOut, LogIn, X, Menu } from 'lucide-react';
 import { auth } from '../lib/firebase';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, User as FirebaseUser, browserPopupRedirectResolver } from 'firebase/auth';
 
@@ -13,12 +13,19 @@ export default function Layout({ children }: LayoutProps) {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
 
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
     });
     return () => unsubscribe();
   }, []);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
 
   const handleLogin = async () => {
     setAuthError(null);
@@ -52,6 +59,13 @@ export default function Layout({ children }: LayoutProps) {
     return false;
   };
 
+  const navLinks = [
+    { path: '/', label: 'Início' },
+    { path: '/explore', label: 'Explorar' },
+    { path: '/categories', label: 'Categorias' },
+    { path: '/submit', label: 'Enviar' },
+  ];
+
   return (
     <div className="min-h-screen bg-background selection:bg-secondary-container selection:text-secondary">
       {/* Error Banner */}
@@ -67,35 +81,26 @@ export default function Layout({ children }: LayoutProps) {
       {/* Navbar */}
       <nav className="fixed top-0 w-full z-50 glass">
         <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-12">
-            <Link to="/" className="text-2xl font-bold text-primary tracking-tight font-sans">
+          <div className="flex items-center gap-4 md:gap-12">
+            <button 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="md:hidden p-2 hover:bg-surface-container rounded-lg text-on-surface-variant transition-colors"
+            >
+              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+            <Link to="/" className="text-xl md:text-2xl font-bold text-primary tracking-tight font-sans">
               Alquimia do Prato
             </Link>
             <div className="hidden md:flex items-center gap-8 font-sans font-medium text-on-surface-variant">
-              <Link 
-                to="/" 
-                className={`${isActive('/') ? 'text-primary font-bold border-b-2 border-primary' : 'hover:text-primary'} pb-1 transition-all`}
-              >
-                Início
-              </Link>
-              <Link 
-                to="/explore" 
-                className={`${isActive('/explore') ? 'text-primary font-bold border-b-2 border-primary' : 'hover:text-primary'} pb-1 transition-all`}
-              >
-                Explorar
-              </Link>
-              <Link 
-                to="/categories" 
-                className={`${isActive('/categories') ? 'text-primary font-bold border-b-2 border-primary' : 'hover:text-primary'} pb-1 transition-all`}
-              >
-                Categorias
-              </Link>
-              <Link 
-                to="/submit" 
-                className={`${isActive('/submit') ? 'text-primary font-bold border-b-2 border-primary' : 'hover:text-primary'} pb-1 transition-all`}
-              >
-                Enviar
-              </Link>
+              {navLinks.map(link => (
+                <Link 
+                  key={link.path}
+                  to={link.path} 
+                  className={`${isActive(link.path) ? 'text-primary font-bold border-b-2 border-primary' : 'hover:text-primary'} pb-1 transition-all`}
+                >
+                  {link.label}
+                </Link>
+              ))}
               {user && (
                 <Link 
                   to="/manage" 
@@ -114,8 +119,8 @@ export default function Layout({ children }: LayoutProps) {
               )}
             </div>
           </div>
-          <div className="flex items-center gap-6">
-            <div className="relative hidden sm:block">
+          <div className="flex items-center gap-4 md:gap-6">
+            <div className="relative hidden lg:block">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-outline w-5 h-5" />
               <input 
                 type="text" 
@@ -123,10 +128,10 @@ export default function Layout({ children }: LayoutProps) {
                 className="pl-10 pr-4 py-2 rounded-full border-none bg-surface-container text-body-md focus:ring-2 focus:ring-primary w-64 outline-none"
               />
             </div>
-            <div className="flex items-center gap-4 text-on-surface-variant">
+            <div className="flex items-center gap-3 md:gap-4 text-on-surface-variant">
               <button className="hover:text-primary transition-colors"><Bookmark className="w-6 h-6" /></button>
               {user ? (
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 md:gap-4">
                   <div className="w-8 h-8 rounded-full overflow-hidden border border-stone-200 bg-stone-100">
                     {user.photoURL ? (
                       <img src={user.photoURL} alt={user.displayName || ''} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
@@ -135,19 +140,60 @@ export default function Layout({ children }: LayoutProps) {
                     )}
                   </div>
                   <button onClick={handleLogout} className="hover:text-primary transition-colors flex items-center gap-2 font-semibold text-sm">
-                    <LogOut className="w-5 h-5" />
-                    <span className="hidden lg:inline">Sair</span>
+                    <LogOut className="w-5 h-5 shrink-0" />
+                    <span className="hidden sm:inline">Sair</span>
                   </button>
                 </div>
               ) : (
                 <button onClick={handleLogin} className="hover:text-primary transition-colors flex items-center gap-2 font-semibold text-sm">
-                  <LogIn className="w-6 h-6" />
-                  <span className="hidden lg:inline">Entrar</span>
+                  <LogIn className="w-6 h-6 shrink-0" />
+                  <span className="hidden sm:inline">Entrar</span>
                 </button>
               )}
             </div>
           </div>
         </div>
+
+        {/* Mobile Menu Overlay */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden absolute top-full left-0 w-full bg-white border-t border-stone-100 shadow-2xl animate-in slide-in-from-top-2 duration-200">
+            <div className="p-4 space-y-2">
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-outline w-5 h-5" />
+                <input 
+                  type="text" 
+                  placeholder="Buscar receitas..." 
+                  className="w-full pl-10 pr-4 py-3 rounded-xl border-none bg-stone-50 text-base focus:ring-2 focus:ring-primary outline-none"
+                />
+              </div>
+              {navLinks.map(link => (
+                <Link 
+                  key={link.path}
+                  to={link.path} 
+                  className={`block p-3 rounded-xl font-bold transition-all ${isActive(link.path) ? 'bg-primary/10 text-primary' : 'text-on-surface-variant hover:bg-stone-50'}`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+              {user && (
+                <Link 
+                  to="/manage" 
+                  className={`block p-3 rounded-xl font-bold transition-all ${isActive('/manage') ? 'bg-primary/10 text-primary' : 'text-on-surface-variant hover:bg-stone-50'}`}
+                >
+                  Minhas Receitas
+                </Link>
+              )}
+              {user?.email === 'sagacitas.sistemas@gmail.com' && (
+                <Link 
+                  to="/admin" 
+                  className={`block p-3 rounded-xl font-bold transition-all ${isActive('/admin') ? 'bg-primary/10 text-primary' : 'text-on-surface-variant hover:bg-stone-50'}`}
+                >
+                  Admin
+                </Link>
+              )}
+            </div>
+          </div>
+        )}
       </nav>
 
       <main className="pt-28">
@@ -161,7 +207,8 @@ export default function Layout({ children }: LayoutProps) {
             <div className="flex flex-col items-center md:items-start gap-2">
               <span className="text-2xl font-bold text-primary">Alquimia do Prato</span>
               <p className="text-on-surface-variant text-center md:text-left">
-                © 2024 Alquimia do Prato. Nutricionando cozinheiros de todos os lugares.
+                © 2026 Alquimia do Prato. A magia da cozinha acessível a todos, em todo lugar.
+                <span className="block mt-1 text-[10px] font-bold opacity-50 uppercase tracking-widest">Revisão 2.0</span>
               </p>
             </div>
             <div className="grid grid-cols-2 sm:flex gap-8 text-on-surface-variant font-semibold">

@@ -148,7 +148,9 @@ export default function AdminDashboard() {
                       </div>
                       <div className="flex items-center gap-2 text-xs font-medium text-stone-400">
                         <Calendar className="w-3.5 h-3.5" /> 
-                        {recipe.createdAt?.toDate?.() ? recipe.createdAt.toDate().toLocaleDateString('pt-BR') : 'Sem data'}
+                        {recipe.createdAt?.toDate?.() 
+                          ? recipe.createdAt.toDate().toLocaleDateString('pt-BR') 
+                          : (recipe.createdAt ? new Date(recipe.createdAt).toLocaleDateString('pt-BR') : 'Sem data')}
                       </div>
                     </div>
                   </td>

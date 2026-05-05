@@ -592,7 +592,15 @@ export default function RecipeDetail() {
             <div style={{ display: 'flex', gap: '6mm', marginBottom: '6mm' }}>
               <div style={{ flex: '0 0 70mm', height: '45mm', borderRadius: '8px', overflow: 'hidden', border: '1px solid #f5f5f4' }}>
                 {recipe.image && (
-                  <img src={recipe.image} alt={recipe.title} style={{ width: '100%', height: '100%', objectPosition: 'center', objectFit: 'cover' }} crossOrigin="anonymous" />
+                  <img 
+                    src={recipe.image} 
+                    alt={recipe.title} 
+                    style={{ width: '100%', height: '100%', objectPosition: 'center', objectFit: 'cover' }} 
+                    crossOrigin="anonymous" 
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
                 )}
               </div>
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
