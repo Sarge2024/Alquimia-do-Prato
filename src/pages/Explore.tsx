@@ -69,12 +69,21 @@ export default function Explore() {
   }, []);
 
   useEffect(() => {
-    if (categoryFilter) {
-      setFilteredRecipes(recipes.filter(r => r.category === categoryFilter));
-    } else {
-      setFilteredRecipes(recipes);
+    const category = searchParams.get('category');
+    const diet = searchParams.get('diet');
+    
+    let filtered = [...recipes];
+    
+    if (category) {
+      filtered = filtered.filter(r => r.category === category);
     }
-  }, [categoryFilter, recipes]);
+    
+    if (diet) {
+      filtered = filtered.filter(r => r.dietType === diet);
+    }
+    
+    setFilteredRecipes(filtered);
+  }, [searchParams, recipes]);
 
   const loadRecipes = async () => {
     try {
@@ -98,8 +107,22 @@ export default function Explore() {
       case 'Café da Manhã': return 'bg-yellow-100 text-yellow-700';
       case 'Almoço': return 'bg-primary-fixed text-on-primary-fixed';
       case 'Jantar': return 'bg-secondary-container text-on-secondary-container';
+      case 'Cocktail': return 'bg-orange-100 text-orange-700';
+      case 'Bebidas': return 'bg-blue-100 text-blue-700';
       case 'Sobremesas': return 'bg-pink-100 text-pink-700';
       default: return 'bg-stone-100 text-stone-700';
+    }
+  };
+
+  const getDietTagColor = (diet?: string) => {
+    switch (diet) {
+      case 'Vegana': return 'bg-green-100 text-green-700';
+      case 'Vegetariana': return 'bg-emerald-100 text-emerald-700';
+      case 'Low Carb': return 'bg-blue-100 text-blue-700';
+      case 'Fit': return 'bg-cyan-100 text-cyan-700';
+      case 'Sem Glúten': return 'bg-amber-100 text-amber-700';
+      case 'Keto': return 'bg-indigo-100 text-indigo-700';
+      default: return 'bg-stone-50 text-stone-500 border border-stone-200';
     }
   };
 
@@ -161,7 +184,7 @@ export default function Explore() {
                   Categorias <ChevronDown className="w-4 h-4" />
                 </button>
                 <div className="mt-3 space-y-2 text-sm text-on-surface-variant">
-                  {['Café da Manhã', 'Almoço', 'Jantar', 'Sobremesas'].map(cat => (
+                  {['Café da Manhã', 'Almoço', 'Jantar', 'Cocktail', 'Sobremesas', 'Bebidas'].map(cat => (
                     <label key={cat} className="flex items-center gap-2 cursor-pointer">
                       <input 
                         type="radio" 
@@ -181,18 +204,25 @@ export default function Explore() {
                   Dieta <ChevronDown className="w-4 h-4" />
                 </button>
                 <div className="mt-3 space-y-2 text-sm text-on-surface-variant">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" className="rounded text-primary focus:ring-primary" />
-                    <span>Vegano</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" className="rounded text-primary focus:ring-primary" />
-                    <span>Sem Glúten</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" className="rounded text-primary focus:ring-primary" />
-                    <span>Sem Lactose</span>
-                  </label>
+                  {['Convencional', 'Vegana', 'Vegetariana', 'Low Carb', 'Keto', 'Sem Glúten', 'Fit'].map(diet => (
+                    <label key={diet} className="flex items-center gap-2 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        className="rounded text-primary focus:ring-primary"
+                        checked={searchParams.get('diet') === diet}
+                        onChange={(e) => {
+                          const newParams = new URLSearchParams(searchParams);
+                          if (e.target.checked) {
+                            newParams.set('diet', diet);
+                          } else {
+                            newParams.delete('diet');
+                          }
+                          setSearchParams(newParams);
+                        }}
+                      />
+                      <span>{diet}</span>
+                    </label>
+                  ))}
                 </div>
               </div>
 
@@ -250,9 +280,16 @@ export default function Explore() {
                                 )}
                               </div>
                               <div className="p-5">
-                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${getTagColor(recipe.category)} inline-block mb-3`}>
-                                  {recipe.category}
-                                </span>
+                                <div className="flex gap-2 mb-3">
+                                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${getTagColor(recipe.category)}`}>
+                                    {recipe.category}
+                                  </span>
+                                  {recipe.dietType && (
+                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${getDietTagColor(recipe.dietType)}`}>
+                                      {recipe.dietType}
+                                    </span>
+                                  )}
+                                </div>
                                 <h3 className="text-xl font-bold text-on-surface mb-3 group-hover:text-primary transition-colors line-clamp-1">
                                   {recipe.title}
                                 </h3>
@@ -304,6 +341,11 @@ export default function Explore() {
                                 <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-tight ${getTagColor(recipe.category)}`}>
                                   {recipe.category}
                                 </span>
+                                {recipe.dietType && (
+                                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-tight ${getDietTagColor(recipe.dietType)}`}>
+                                    {recipe.dietType}
+                                  </span>
+                                )}
                               </div>
                               <h3 className="text-base md:text-lg font-bold text-on-surface truncate group-hover:text-primary transition-colors">
                                 {recipe.title}

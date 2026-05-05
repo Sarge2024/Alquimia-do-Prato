@@ -65,6 +65,7 @@ export interface Recipe {
   category: string;
   time?: string;
   prepTime?: string; // Tempo de Preparação
+  dietType?: string; // Tipo de Dieta
   servings?: string;
   difficulty?: string;
   ingredients: (string | Ingredient)[]; // Maintain string support for backward compatibility/simplicity

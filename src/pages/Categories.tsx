@@ -25,6 +25,18 @@ const CATEGORIES_DETAILED = [
     desc: 'Doces artesanais que celebram sabores naturais.',
     count: '27 receitas',
     img: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&q=80&w=800' 
+  },
+  { 
+    name: 'Cocktail', 
+    desc: 'Petiscos, quitutes e tira-gostos para cofee breaks e recepções.',
+    count: '15 receitas',
+    img: 'https://images.unsplash.com/photo-1541529086526-db283c563270?auto=format&fit=crop&q=80&w=800' 
+  },
+  { 
+    name: 'Bebidas', 
+    desc: 'Sucos, drinks e bebidas refrescantes para todas as ocasiões.',
+    count: '12 receitas',
+    img: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&q=80&w=800' 
   }
 ];
 

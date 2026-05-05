@@ -8,6 +8,7 @@ const CATEGORIES = [
   { name: 'Café da Manhã', img: 'https://images.unsplash.com/photo-1493770348161-369560ae357d?auto=format&fit=crop&q=80&w=800' },
   { name: 'Almoço', img: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&q=80&w=800' },
   { name: 'Jantar', img: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&q=80&w=800' },
+  { name: 'Cocktail', img: 'https://images.unsplash.com/photo-1541529086526-db283c563270?auto=format&fit=crop&q=80&w=800' },
   { name: 'Sobremesas', img: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&q=80&w=800' },
 ];
 
@@ -79,8 +80,22 @@ export default function Home() {
       case 'Café da Manhã': return 'bg-yellow-100 text-yellow-700';
       case 'Almoço': return 'bg-primary-fixed text-on-primary-fixed';
       case 'Jantar': return 'bg-secondary-container text-on-secondary-container';
+      case 'Cocktail': return 'bg-orange-100 text-orange-700';
+      case 'Bebidas': return 'bg-blue-100 text-blue-700';
       case 'Sobremesas': return 'bg-pink-100 text-pink-700';
       default: return 'bg-stone-100 text-stone-700';
+    }
+  };
+
+  const getDietTagColor = (diet?: string) => {
+    switch (diet) {
+      case 'Vegana': return 'bg-green-100 text-green-700';
+      case 'Vegetariana': return 'bg-emerald-100 text-emerald-700';
+      case 'Low Carb': return 'bg-blue-100 text-blue-700';
+      case 'Fit': return 'bg-cyan-100 text-cyan-700';
+      case 'Sem Glúten': return 'bg-amber-100 text-amber-700';
+      case 'Keto': return 'bg-indigo-100 text-indigo-700';
+      default: return 'bg-stone-50 text-stone-500 border border-stone-200';
     }
   };
 
@@ -211,6 +226,11 @@ export default function Home() {
                         <span className={`px-3 py-0.5 rounded-full text-[12px] font-bold tracking-wider uppercase ${getTagColor(recipe.category)}`}>
                           {recipe.category}
                         </span>
+                        {recipe.dietType && (
+                          <span className={`px-3 py-0.5 rounded-full text-[12px] font-bold tracking-wider uppercase ${getDietTagColor(recipe.dietType)}`}>
+                            {recipe.dietType}
+                          </span>
+                        )}
                       </div>
                       <h3 className="text-2xl font-bold text-on-surface mb-4 group-hover:text-primary transition-colors leading-snug line-clamp-1">
                         {recipe.title}

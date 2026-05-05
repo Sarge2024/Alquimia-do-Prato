@@ -22,6 +22,7 @@ export default function Submit() {
     description: '',
     image: '',
     category: 'Almoço',
+    dietType: 'Convencional',
     time: '',
     prepTime: '',
     servings: '',
@@ -68,6 +69,7 @@ export default function Submit() {
           description: recipe.description || '',
           image: recipe.image || '',
           category: recipe.category,
+          dietType: recipe.dietType || 'Convencional',
           time: recipe.time || '',
           prepTime: recipe.prepTime || '',
           servings: recipe.servings || '',
@@ -211,6 +213,25 @@ export default function Submit() {
                 <option>Almoço</option>
                 <option>Jantar</option>
                 <option>Sobremesas</option>
+                <option>Cocktail</option>
+                <option>Bebidas</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="block font-semibold text-on-surface-variant">Tipo de Dieta</label>
+              <select 
+                name="dietType"
+                value={formData.dietType}
+                onChange={handleInputChange}
+                className="w-full p-4 rounded-xl bg-surface-container border-none focus:ring-2 focus:ring-primary outline-none appearance-none"
+              >
+                <option>Convencional</option>
+                <option>Vegana</option>
+                <option>Vegetariana</option>
+                <option>Low Carb</option>
+                <option>Keto</option>
+                <option>Sem Glúten</option>
+                <option>Fit</option>
               </select>
             </div>
           </div>

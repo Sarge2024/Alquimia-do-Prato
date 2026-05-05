@@ -295,7 +295,16 @@ export default function RecipeDetail() {
                 <p className="font-semibold text-sm">{recipe.difficulty || 'Médio'}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 col-span-2 pt-4 border-t border-stone-100">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary">
+                <Heart className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-xs text-on-surface-variant font-bold uppercase tracking-wider text-[10px]">Dieta</p>
+                <p className="font-semibold text-sm">{recipe.dietType || 'Convencional'}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 pt-4 border-t border-stone-100">
               <div className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary">
                 <Heart className="w-5 h-5" />
               </div>

@@ -19,9 +19,10 @@ export const geminiService = {
       2. MEDIDAS: Converta unidades imperiais (cups, oz, °F) para métricas (ml, g, °C) ou medidas comuns no Brasil (xícaras, colheres).
       
       REGRAS ESTRITAS DE RETORNO (JSON):
-      - title, description, category (Café da Manhã, Almoço, Jantar, Sobremesas).
+      - title, description, category (Café da Manhã, Almoço, Jantar, Sobremesas, Cocktail, Bebidas).
       - time (string): TEMPO TOTAL (ex: '45 min').
       - prepTime (string): TEMPO DE PREPARAÇÃO (ex: '15 min').
+      - dietType (string): TIPO DE DIETA (ex: 'Convencional', 'Vegana', 'Vegetariana', 'Low Carb', 'Keto', 'Sem Glúten', 'Fit'). Se não houver restrição clara, use 'Convencional'.
       - difficulty, servings.
       - ingredients (objeto[] com name e quantity). Quantidade nunca vazia (use "a gosto" se necessário).
       - instructions (string[]).
@@ -29,8 +30,8 @@ export const geminiService = {
     `;
 
     const contentPrompt = isUrlOnly 
-      ? `Acesse e pesquise os detalhes da receita no seguinte link: ${options.url}. Use ferramentas de busca se necessário para encontrar o conteúdo completo.`
-      : `Extraia do seguinte HTML: ${html.substring(0, 12000)}`;
+      ? `Acesse e pesquise os detalhes da receita no seguinte link: ${options.url}. Se for um petisco, quitute ou acompanhamento para coffee break, classifique como 'Cocktail'. Use ferramentas de busca se necessário para encontrar o conteúdo completo.`
+      : `Extraia do seguinte HTML: ${html.substring(0, 12000)}. Se for um petisco, quitute ou acompanhamento para coffee break, classifique como 'Cocktail'.`;
 
     const prompt = `
       ${basePrompt}
