@@ -49,3 +49,95 @@
 .recipe-card-shadow:hover {
   box-shadow: 0 10px 40px -4px rgba(145, 71, 48, 0.12);
 }
+
+@media print {
+  nav, footer, .no-print, button, .ChevronLeft_container, .share-buttons, [role="button"] {
+    display: none !important;
+  }
+
+  body {
+    background-color: white !important;
+    padding: 0 !important;
+    color: black !important;
+    font-size: 12pt !important;
+  }
+
+  main {
+    padding-top: 0 !important;
+  }
+
+  @page {
+    margin: 2cm;
+    size: auto;
+  }
+
+  .max-w-5xl {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .shadow-2xl, .shadow-lg, .shadow-inner, .shadow-xl, .shadow-md {
+    box-shadow: none !important;
+  }
+
+  .rounded-3xl, .rounded-xl, .rounded-full, .rounded-lg {
+    border-radius: 0 !important;
+    border-width: 1px !important;
+  }
+
+  .bg-surface-container, .bg-surface-container-low, .bg-surface-container-highest {
+    background-color: white !important;
+    border: 1px solid #eee !important;
+  }
+
+  .text-primary {
+    color: #914730 !important;
+  }
+
+  img {
+    max-height: 250px !important;
+    width: auto !important;
+    margin: 0 auto !important;
+    display: block !important;
+    object-fit: contain !important;
+    page-break-inside: avoid;
+  }
+
+  .grid {
+    display: block !important;
+  }
+
+  .grid > * {
+    margin-bottom: 2rem !important;
+    page-break-inside: avoid;
+  }
+
+  h1 {
+    font-size: 24pt !important;
+    margin-bottom: 0.5rem !important;
+    color: black !important;
+  }
+
+  h2, h3 {
+    page-break-after: avoid;
+  }
+
+  .flex-shrink-0 {
+    flex-shrink: 1 !important;
+  }
+
+  /* Specific structure for 1 page layout */
+  .lg\:col-span-1, .lg\:col-span-2, .lg\:col-span-3 {
+    width: 100% !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  /* Force content to stay together for cleaner PDF */
+  section, aside {
+    page-break-inside: avoid;
+  }
+}

@@ -19,11 +19,11 @@ export const geminiService = {
       2. MEDIDAS: Converta unidades imperiais (cups, oz, °F) para métricas (ml, g, °C) ou medidas comuns no Brasil (xícaras, colheres).
       
       REGRAS ESTRITAS DE RETORNO (JSON):
-      - title, description, category (Café da Manhã, Almoço, Jantar, Sobremesas, Cocktail, Bebidas).
+      - title, description, category (USE EXATAMENTE UMA DESTAS: 'Café da Manhã', 'Almoço', 'Jantar', 'Sobremesas', 'Cocktail', 'Bebidas').
       - time (string): TEMPO TOTAL (ex: '45 min').
       - prepTime (string): TEMPO DE PREPARAÇÃO (ex: '15 min').
-      - dietType (string): TIPO DE DIETA (ex: 'Convencional', 'Vegana', 'Vegetariana', 'Low Carb', 'Keto', 'Sem Glúten', 'Fit'). Se não houver restrição clara, use 'Convencional'.
-      - difficulty, servings.
+      - dietType (string): TIPO DE DIETA (USE EXATAMENTE UMA DESTAS: 'Convencional', 'Vegana', 'Vegetariana', 'Low Carb', 'Keto', 'Sem Glúten', 'Fit'). Se não houver restrição clara, use 'Convencional'.
+      - difficulty (Fácil, Médio, Avançado), servings.
       - ingredients (objeto[] com name e quantity). Quantidade nunca vazia (use "a gosto" se necessário).
       - instructions (string[]).
       - image, imageOptions (string[]).
@@ -53,38 +53,45 @@ export const geminiService = {
       }
 
       const response = await (ai.models as any).generateContent(modelParams);
-
       const text = response.text || "";
       const jsonStr = text.replace(/```json/g, "").replace(/```/g, "").trim();
       let result = JSON.parse(jsonStr);
 
-      // Conferência de Disponibilidade de Dados
-      const hasIngredients = result.ingredients && result.ingredients.length > 0;
-      const hasInstructions = result.instructions && result.instructions.length > 0;
+      // Sanitize fields to ensure they are the correct types for Firestore
+      result.title = String(result.title || "").substring(0, 300);
+      result.description = String(result.description || "").substring(0, 5000);
+      
+      const categories = ['Café da Manhã', 'Almoço', 'Jantar', 'Sobremesas', 'Cocktail', 'Bebidas'];
+      if (!categories.includes(result.category)) {
+        result.category = "Almoço";
+      }
+      
+      const dietTypes = ['Convencional', 'Vegana', 'Vegetariana', 'Low Carb', 'Keto', 'Sem Glúten', 'Fit'];
+      if (!dietTypes.includes(result.dietType)) {
+        result.dietType = "Convencional";
+      }
 
-      if (result.title && (!hasIngredients || !hasInstructions)) {
-        console.log(`Dados incompletos para "${result.title}". Iniciando busca de recuperação...`);
-        try {
-          const recoveryPrompt = `Complete a receita para "${result.title}". 
-          Forneça a lista de ingredientes (com name e quantity) e o modo de preparo (passo a passo).
-          Retorne APENAS um JSON com os campos "ingredients" e "instructions".`;
-          
-          const recoveryResponse = await (ai.models as any).generateContent({
-            model: "gemini-3-flash-preview",
-            contents: recoveryPrompt,
-            tools: [{ googleSearch: {} }]
-          });
+      result.time = String(result.time || "");
+      result.prepTime = String(result.prepTime || "");
+      result.servings = String(result.servings || "");
+      result.difficulty = result.difficulty || "Médio";
+      if (!['Fácil', 'Médio', 'Avançado'].includes(result.difficulty)) {
+        result.difficulty = "Médio";
+      }
+      
+      if (Array.isArray(result.ingredients)) {
+        result.ingredients = result.ingredients.map((ing: any) => ({
+          name: String(ing.name || ing || "").substring(0, 200),
+          quantity: String(ing.quantity || "").substring(0, 100)
+        }));
+      } else {
+        result.ingredients = [];
+      }
 
-          const recoveryText = recoveryResponse.text || "";
-          const recoveryJsonMatch = recoveryText.match(/\{[\s\S]*\}/);
-          if (recoveryJsonMatch) {
-            const recoveryData = JSON.parse(recoveryJsonMatch[0]);
-            if (!hasIngredients && recoveryData.ingredients) result.ingredients = recoveryData.ingredients;
-            if (!hasInstructions && recoveryData.instructions) result.instructions = recoveryData.instructions;
-          }
-        } catch (recoveryError) {
-          console.error("Erro na recuperação de dados:", recoveryError);
-        }
+      if (Array.isArray(result.instructions)) {
+        result.instructions = result.instructions.map((step: any) => String(step).substring(0, 1000));
+      } else {
+        result.instructions = [];
       }
 
       // Final merge of image options: Original site images + AI found images + Google Search (if needed)

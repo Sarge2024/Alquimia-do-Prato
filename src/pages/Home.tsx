@@ -1,8 +1,9 @@
 import { motion } from 'motion/react';
-import { ArrowRight, Clock, Utensils, Heart, Star, Loader2 } from 'lucide-react';
+import { ArrowRight, Clock, Utensils, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { recipeService, Recipe } from '../services/recipeService';
+import { RecipeCard } from '../components/RecipeCard';
 
 const CATEGORIES = [
   { name: 'Café da Manhã', img: 'https://images.unsplash.com/photo-1493770348161-369560ae357d?auto=format&fit=crop&q=80&w=800' },
@@ -12,7 +13,7 @@ const CATEGORIES = [
   { name: 'Sobremesas', img: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&q=80&w=800' },
 ];
 
-const MOCK_RECIPES = [
+const MOCK_RECIPES: Recipe[] = [
   {
     id: 'tapioca-rendada',
     title: 'Tapioca Rendada com Queijo Coalho',
@@ -20,6 +21,7 @@ const MOCK_RECIPES = [
     time: '12 min',
     rating: 4.9,
     reviewsCount: 45,
+    difficulty: 'Fácil',
     image: 'https://images.unsplash.com/photo-1541519227354-08fa5d50c44d?auto=format&fit=crop&q=80&w=800',
     ownerId: 'system',
     ingredients: [],
@@ -32,6 +34,7 @@ const MOCK_RECIPES = [
     time: '3h 00min',
     rating: 5.0,
     reviewsCount: 128,
+    difficulty: 'Médio',
     image: 'https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?auto=format&fit=crop&q=80&w=800',
     ownerId: 'system',
     ingredients: [],
@@ -44,6 +47,7 @@ const MOCK_RECIPES = [
     time: '25 min',
     rating: 4.8,
     reviewsCount: 67,
+    difficulty: 'Fácil',
     image: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&q=80&w=800',
     ownerId: 'system',
     ingredients: [],
@@ -72,30 +76,6 @@ export default function Home() {
       setRecipes(MOCK_RECIPES);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const getTagColor = (category: string) => {
-    switch (category) {
-      case 'Café da Manhã': return 'bg-yellow-100 text-yellow-700';
-      case 'Almoço': return 'bg-primary-fixed text-on-primary-fixed';
-      case 'Jantar': return 'bg-secondary-container text-on-secondary-container';
-      case 'Cocktail': return 'bg-orange-100 text-orange-700';
-      case 'Bebidas': return 'bg-blue-100 text-blue-700';
-      case 'Sobremesas': return 'bg-pink-100 text-pink-700';
-      default: return 'bg-stone-100 text-stone-700';
-    }
-  };
-
-  const getDietTagColor = (diet?: string) => {
-    switch (diet) {
-      case 'Vegana': return 'bg-green-100 text-green-700';
-      case 'Vegetariana': return 'bg-emerald-100 text-emerald-700';
-      case 'Low Carb': return 'bg-blue-100 text-blue-700';
-      case 'Fit': return 'bg-cyan-100 text-cyan-700';
-      case 'Sem Glúten': return 'bg-amber-100 text-amber-700';
-      case 'Keto': return 'bg-indigo-100 text-indigo-700';
-      default: return 'bg-stone-50 text-stone-500 border border-stone-200';
     }
   };
 
@@ -197,65 +177,8 @@ export default function Home() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {recipes.map((recipe, i) => (
-              <div key={recipe.id || `home-recipe-${i}`} className="relative group">
-                <Link to={`/recipe/${recipe.id}`}>
-                  <motion.article 
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.1 }}
-                    className="group bg-surface-container-low rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 cursor-pointer h-full border border-stone-100"
-                  >
-                    <div className="aspect-[4/3] overflow-hidden relative bg-stone-200">
-                      {recipe.image ? (
-                        <img 
-                        src={recipe.image} 
-                        alt={recipe.title} 
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
-                        referrerPolicy="no-referrer"
-                      />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-stone-400 font-bold uppercase text-xs">
-                          Alquimia
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-6">
-                      <div className="flex gap-2 mb-3">
-                        <span className={`px-3 py-0.5 rounded-full text-[12px] font-bold tracking-wider uppercase ${getTagColor(recipe.category)}`}>
-                          {recipe.category}
-                        </span>
-                        {recipe.dietType && (
-                          <span className={`px-3 py-0.5 rounded-full text-[12px] font-bold tracking-wider uppercase ${getDietTagColor(recipe.dietType)}`}>
-                            {recipe.dietType}
-                          </span>
-                        )}
-                      </div>
-                      <h3 className="text-2xl font-bold text-on-surface mb-4 group-hover:text-primary transition-colors leading-snug line-clamp-1">
-                        {recipe.title}
-                      </h3>
-                      <div className="flex flex-wrap items-center justify-between text-on-surface-variant font-semibold text-sm">
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-4 h-4" />
-                          {recipe.time || 'N/A'}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Utensils className="w-4 h-4" />
-                          {recipe.servings || 'N/A'}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                          {recipe.rating?.toFixed(1) || '0.0'} ({recipe.reviewsCount || 0})
-                        </div>
-                      </div>
-                    </div>
-                  </motion.article>
-                </Link>
-                <button className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/90 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-colors shadow-sm z-10">
-                  <Heart className="w-5 h-5" />
-                </button>
-              </div>
+            {recipes.map((recipe) => (
+              <RecipeCard key={recipe.id || `home-recipe-${Math.random()}`} recipe={recipe} />
             ))}
           </div>
         )}

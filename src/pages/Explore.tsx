@@ -4,7 +4,9 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { recipeService, Recipe } from '../services/recipeService';
 
-const MOCK_RECIPES = [
+import { RecipeCard } from '../components/RecipeCard';
+
+const MOCK_RECIPES: Recipe[] = [
   {
     id: 'tapioca-rendada',
     title: 'Tapioca Rendada com Queijo Coalho',
@@ -12,6 +14,7 @@ const MOCK_RECIPES = [
     time: '12 min',
     rating: 4.9,
     reviewsCount: 45,
+    difficulty: 'Fácil',
     image: 'https://images.unsplash.com/photo-1541519227354-08fa5d50c44d?auto=format&fit=crop&q=80&w=800',
     ownerId: 'system',
     ingredients: [],
@@ -24,6 +27,7 @@ const MOCK_RECIPES = [
     time: '3h 00min',
     rating: 5.0,
     reviewsCount: 128,
+    difficulty: 'Médio',
     image: 'https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?auto=format&fit=crop&q=80&w=800',
     ownerId: 'system',
     ingredients: [],
@@ -36,6 +40,7 @@ const MOCK_RECIPES = [
     time: '25 min',
     rating: 4.8,
     reviewsCount: 67,
+    difficulty: 'Fácil',
     image: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&q=80&w=800',
     ownerId: 'system',
     ingredients: [],
@@ -48,6 +53,7 @@ const MOCK_RECIPES = [
     time: '1h 30min',
     rating: 4.9,
     reviewsCount: 210,
+    difficulty: 'Médio',
     image: 'https://images.unsplash.com/photo-1528975604071-b4dc52a2d18c?auto=format&fit=crop&q=80&w=800',
     ownerId: 'system',
     ingredients: [],
@@ -256,64 +262,8 @@ export default function Explore() {
                 <>
                   {viewMode === 'grid' ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {filteredRecipes.map((recipe, i) => (
-                        <div key={recipe.id || `explore-recipe-${i}`} className="relative group">
-                          <Link to={`/recipe/${recipe.id}`}>
-                            <motion.article 
-                              initial={{ opacity: 0, scale: 0.95 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              transition={{ delay: i * 0.05 }}
-                              className="group bg-surface-container-low rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 cursor-pointer border border-stone-100 h-full"
-                            >
-                              <div className="aspect-[4/3] overflow-hidden relative bg-stone-200">
-                                {recipe.image ? (
-                                  <img 
-                                    src={recipe.image} 
-                                    alt={recipe.title} 
-                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
-                                    referrerPolicy="no-referrer"
-                                  />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center text-stone-400 font-bold uppercase text-xs">
-                                    Sem Imagem
-                                  </div>
-                                )}
-                              </div>
-                              <div className="p-5">
-                                <div className="flex gap-2 mb-3">
-                                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${getTagColor(recipe.category)}`}>
-                                    {recipe.category}
-                                  </span>
-                                  {recipe.dietType && (
-                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${getDietTagColor(recipe.dietType)}`}>
-                                      {recipe.dietType}
-                                    </span>
-                                  )}
-                                </div>
-                                <h3 className="text-xl font-bold text-on-surface mb-3 group-hover:text-primary transition-colors line-clamp-1">
-                                  {recipe.title}
-                                </h3>
-                                <div className="flex items-center justify-between text-on-surface-variant text-xs font-semibold">
-                                  <div className="flex items-center gap-1.5">
-                                    <Clock className="w-3.5 h-3.5" />
-                                    {recipe.time || 'N/A'}
-                                  </div>
-                                  <div className="flex items-center gap-1.5">
-                                    <Utensils className="w-3.5 h-3.5" />
-                                    {recipe.servings || 'N/A'}
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
-                                    {recipe.rating?.toFixed(1) || '0.0'}
-                                  </div>
-                                </div>
-                              </div>
-                            </motion.article>
-                          </Link>
-                          <button className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/90 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-colors z-10">
-                            <Heart className="w-4 h-4" />
-                          </button>
-                        </div>
+                      {filteredRecipes.map((recipe) => (
+                        <RecipeCard key={recipe.id || `explore-grid-${Math.random()}`} recipe={recipe} />
                       ))}
                     </div>
                   ) : (

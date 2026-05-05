@@ -1,10 +1,11 @@
 import { motion } from 'motion/react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Clock, Utensils, Heart, Share2, Printer, ChevronLeft, CheckCircle2, Edit3, Trash2, Loader2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Clock, Utensils, Heart, Share2, Printer, ChevronLeft, CheckCircle2, Edit3, Trash2, Loader2, Gauge, Facebook, Twitter, MessageCircle, X } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 import { recipeService, Recipe } from '../services/recipeService';
 import { auth } from '../lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import html2pdf from 'html2pdf.js';
 
 const MOCK_RECIPES_DETAIL: Record<string, Recipe> = {
   'tapioca-rendada': {
@@ -128,6 +129,91 @@ export default function RecipeDetail() {
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const [isPrinting, setIsPrinting] = useState(false);
+  const printRef = useRef<HTMLDivElement>(null);
+
+  const shareUrl = window.location.href;
+  const shareText = recipe 
+    ? `🥘 *${recipe.title}* \n\nConfira esta receita completa no Alquimia do Prato!` 
+    : 'Confira esta receita no Alquimia do Prato!';
+
+  const [isSharing, setIsSharing] = useState(false);
+
+  const shareAsPDF = async () => {
+    if (!recipe || !printRef.current) return;
+    
+    setIsSharing(true);
+    setShowShareMenu(false);
+    
+    const element = printRef.current;
+    const filename = `Receita_${recipe.title.replace(/\s+/g, '_')}.pdf`;
+    
+    const opt = {
+      margin: [5, 5, 5, 5],
+      filename: filename,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { 
+        scale: 2, 
+        useCORS: true,
+        letterRendering: true,
+        logging: false,
+        scrollY: 0
+      },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    } as any;
+
+    try {
+      // 1. Generate PDF as blob
+      const pdfBlob = await html2pdf().set(opt).from(element).output('blob');
+      const file = new File([pdfBlob], filename, { type: 'application/pdf' });
+
+      // 2. Check if the browser supports sharing this specific file
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: `Ficha Técnica: ${recipe.title}`,
+          text: `Confira a ficha técnica de preparo: *${recipe.title}*`
+        });
+      } else {
+        // 3. Fallback for Desktop/Unsupported browsers
+        // We can't "attach" files to WhatsApp Web via URL, so we download and notify
+        const url = URL.createObjectURL(pdfBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        alert('Seu navegador não suporta o envio direto de arquivos. O PDF foi baixado para que você possa anexá-lo manualmente no WhatsApp.');
+      }
+    } catch (error) {
+      console.error('Error in PDF sharing:', error);
+      alert('Não foi possível compartilhar o PDF. Tente copiar o link da receita.');
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  const shareLinks = {
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
+    twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`,
+    whatsapp: `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + shareUrl)}`
+  };
+
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      alert('Link da receita copiado!');
+      setShowShareMenu(false);
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+    }
+  };
+
   const [user, setUser] = useState(auth.currentUser);
 
   useEffect(() => {
@@ -137,6 +223,38 @@ export default function RecipeDetail() {
     }
     return () => unsubscribe();
   }, [id]);
+
+  useEffect(() => {
+    if (recipe) {
+      document.title = `${recipe.title} | Alquimia do Prato`;
+      
+      // Update meta tags for social previews (some modern scrapers use JS)
+      const updateMeta = (name: string, property: string, content: string) => {
+        let el = (name ? document.querySelector(`meta[name="${name}"]`) : null) || 
+                 (property ? document.querySelector(`meta[property="${property}"]`) : null);
+                 
+        if (!el) {
+          el = document.createElement('meta');
+          if (name) el.setAttribute('name', name);
+          if (property) el.setAttribute('property', property);
+          document.head.appendChild(el);
+        }
+        el.setAttribute('content', content);
+      };
+
+      if (recipe.description) updateMeta('description', 'og:description', recipe.description);
+      updateMeta('', 'og:title', recipe.title);
+      if (recipe.image) {
+        updateMeta('', 'og:image', recipe.image);
+        updateMeta('', 'twitter:image', recipe.image);
+      }
+      updateMeta('', 'og:url', window.location.href);
+      updateMeta('', 'og:type', 'article');
+      updateMeta('', 'twitter:card', 'summary_large_image');
+      updateMeta('', 'twitter:title', recipe.title);
+      if (recipe.description) updateMeta('', 'twitter:description', recipe.description);
+    }
+  }, [recipe]);
 
   const loadRecipe = async (recipeId: string) => {
     try {
@@ -177,6 +295,38 @@ export default function RecipeDetail() {
     }
   };
 
+  const handlePrint = async () => {
+    if (!recipe || !printRef.current) return;
+    
+    setIsPrinting(true);
+    
+    const element = printRef.current;
+    const opt = {
+      margin: [5, 5, 5, 5],
+      filename: `Receita_${recipe.title.replace(/\s+/g, '_')}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { 
+        scale: 2, 
+        useCORS: true,
+        letterRendering: true,
+        logging: false,
+        scrollY: 0
+      },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    } as any;
+
+    try {
+      // Show printing notification or handle state
+      await html2pdf().set(opt).from(element).save();
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Erro ao gerar PDF. Tente imprimir usando as ferramentas do navegador (Ctrl+P).');
+    } finally {
+      setIsPrinting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
@@ -206,7 +356,7 @@ export default function RecipeDetail() {
       className="max-w-5xl mx-auto px-6 pb-xl"
     >
       {/* Top Bar */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-8 no-print">
         <Link to="/explore" className="inline-flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors font-semibold">
           <ChevronLeft className="w-5 h-5" /> Explorar Receitas
         </Link>
@@ -229,6 +379,12 @@ export default function RecipeDetail() {
             </button>
           </div>
         )}
+      </div>
+
+      {/* Print Header */}
+      <div className="hidden print:block mb-12 text-center border-b-2 border-stone-100 pb-6">
+        <h2 className="text-4xl font-bold text-primary mb-1">Alquimia do Prato</h2>
+        <p className="text-stone-500 font-medium">alquimiadoprato.app</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
@@ -288,7 +444,7 @@ export default function RecipeDetail() {
             </div>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary">
-                <Printer className="w-5 h-5" />
+                <Gauge className="w-5 h-5" />
               </div>
               <div>
                 <p className="text-xs text-on-surface-variant font-bold uppercase tracking-wider text-[10px]">Dificuldade</p>
@@ -315,13 +471,64 @@ export default function RecipeDetail() {
             </div>
           </div>
 
-          <div className="flex gap-4 pt-4">
+          <div className="flex gap-4 pt-4 no-print">
             <button className="flex-1 bg-primary text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-primary-container transition-all active:scale-95 shadow-lg shadow-primary/20">
               <Heart className="w-5 h-5 fill-white" /> Salvar Receita
             </button>
-            <button className="p-4 rounded-xl border-2 border-stone-200 hover:border-primary hover:text-primary transition-all active:scale-95">
-              <Share2 className="w-6 h-6" />
+            <button 
+              type="button"
+              onClick={handlePrint}
+              disabled={isPrinting}
+              className="p-4 rounded-xl border-2 border-stone-200 hover:border-primary hover:text-primary transition-all active:scale-95 flex items-center gap-2 font-bold"
+              title="Imprimir Receita"
+            >
+              {isPrinting ? <Loader2 className="w-6 h-6 animate-spin" /> : <Printer className="w-6 h-6" />}
+              <span className="hidden sm:inline">{isPrinting ? 'Gerando...' : 'Imprimir'}</span>
             </button>
+            <div className="relative">
+              <button 
+                onClick={() => setShowShareMenu(!showShareMenu)}
+                disabled={isSharing}
+                className={`p-4 rounded-xl border-2 transition-all active:scale-95 flex items-center gap-2 ${showShareMenu ? 'border-primary text-primary bg-primary/5' : 'border-stone-200 hover:border-primary hover:text-primary'} ${isSharing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                title="Compartilhar"
+              >
+                {isSharing ? <Loader2 className="w-6 h-6 animate-spin" /> : (showShareMenu ? <X className="w-6 h-6" /> : <Share2 className="w-6 h-6" />)}
+                <span className="hidden sm:inline">{isSharing ? 'Gerando...' : 'Compartilhar'}</span>
+              </button>
+
+              {showShareMenu && (
+                <div className="absolute bottom-full mb-4 right-0 bg-white rounded-2xl shadow-2xl border border-stone-100 p-2 flex flex-col gap-1 min-w-[240px] z-20 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                  <div className="px-3 py-2 text-xs font-bold text-stone-400 uppercase tracking-widest border-b border-stone-50 mb-1">
+                    Opções de Envio
+                  </div>
+                  
+                  <button 
+                    onClick={shareAsPDF}
+                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-primary/5 text-primary transition-colors font-bold w-full text-left bg-primary/5"
+                  >
+                    <Share2 className="w-5 h-5" /> Enviar Ficha PDF
+                  </button>
+
+                  <button 
+                    onClick={copyToClipboard}
+                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-stone-50 text-stone-600 transition-colors font-bold w-full text-left"
+                  >
+                    <Printer className="w-5 h-5" /> Copiar Link
+                  </button>
+
+                  <div className="h-px bg-stone-100 my-1 mx-2"></div>
+
+                  <a 
+                    href={shareLinks.whatsapp} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-green-50 text-green-600 transition-colors font-bold"
+                  >
+                    <MessageCircle className="w-5 h-5" /> WhatsApp (Link)
+                  </a>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -368,6 +575,103 @@ export default function RecipeDetail() {
             ))}
           </div>
         </section>
+      </div>
+      {/* Hidden Print Template for PDF Generation */}
+      <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
+        <div ref={printRef} style={{ width: '200mm', backgroundColor: '#ffffff', color: '#1c1917', padding: '5mm', fontFamily: 'sans-serif' }}>
+          {/* Decorative Border */}
+          <div style={{ border: '1px solid #e7e5e4', padding: '6mm', position: 'relative' }}>
+            
+            {/* Header / Brand */}
+            <div style={{ textAlign: 'center', marginBottom: '6mm', borderBottom: '1px solid #d6d3d1', paddingBottom: '3mm' }}>
+              <div style={{ color: '#914730', fontSize: '18pt', fontWeight: 'bold', marginBottom: '1pt', letterSpacing: '-0.02em' }}>Alquimia do Prato</div>
+              <div style={{ color: '#78716c', fontSize: '8pt', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Ficha Técnica de Preparo</div>
+            </div>
+
+            {/* Main Title Section */}
+            <div style={{ display: 'flex', gap: '6mm', marginBottom: '6mm' }}>
+              <div style={{ flex: '0 0 70mm', height: '45mm', borderRadius: '8px', overflow: 'hidden', border: '1px solid #f5f5f4' }}>
+                {recipe.image && (
+                  <img src={recipe.image} alt={recipe.title} style={{ width: '100%', height: '100%', objectPosition: 'center', objectFit: 'cover' }} crossOrigin="anonymous" />
+                )}
+              </div>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <h1 style={{ fontSize: '20pt', fontWeight: 'bold', color: '#1c1917', margin: '0 0 3mm 0', lineHeight: '1.1' }}>{recipe.title}</h1>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2mm' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1.5mm' }}>
+                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#914730' }}></div>
+                    <span style={{ fontSize: '8pt', color: '#57534e', fontWeight: 'bold' }}>TEMPO: <span style={{ color: '#1c1917' }}>{recipe.time}</span></span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1.5mm' }}>
+                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#914730' }}></div>
+                    <span style={{ fontSize: '8pt', color: '#57534e', fontWeight: 'bold' }}>PORÇÕES: <span style={{ color: '#1c1917' }}>{recipe.servings}</span></span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1.5mm' }}>
+                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#914730' }}></div>
+                    <span style={{ fontSize: '8pt', color: '#57534e', fontWeight: 'bold' }}>DIFICULDADE: <span style={{ color: '#1c1917' }}>{recipe.difficulty}</span></span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1.5mm' }}>
+                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#914730' }}></div>
+                    <span style={{ fontSize: '8pt', color: '#57534e', fontWeight: 'bold' }}>AVALIAÇÃO: <span style={{ color: '#1c1917' }}>{recipe.rating} / 5.0</span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Description */}
+            <div style={{ backgroundColor: '#fafaf9', padding: '3mm 4mm', borderRadius: '6px', marginBottom: '6mm', borderLeft: '3px solid #914730' }}>
+              <p style={{ margin: 0, fontSize: '9pt', color: '#44403c', fontStyle: 'italic', lineHeight: '1.4' }}>
+                {recipe.description}
+              </p>
+            </div>
+
+            {/* Preparation Content */}
+            <div style={{ display: 'flex', gap: '8mm' }}>
+              {/* Sidebar Ingredients */}
+              <div style={{ flex: '0 0 50mm' }}>
+                <h3 style={{ fontSize: '10pt', fontWeight: 'bold', color: '#914730', borderBottom: '1.5px solid #914730', paddingBottom: '1.5mm', marginBottom: '3mm', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Ingredientes
+                </h3>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                  {recipe.ingredients.map((ing, i) => (
+                    <li key={i} style={{ paddingBottom: '1.5mm', borderBottom: '1px solid #f5f5f4', marginBottom: '1.5mm' }}>
+                      {typeof ing === 'object' && ing.quantity && (
+                        <div style={{ fontSize: '7pt', fontWeight: 'bold', color: '#914730', marginBottom: '0.5pt' }}>{ing.quantity}</div>
+                      )}
+                      <div style={{ fontSize: '9pt', color: '#1c1917', fontWeight: '500' }}>{typeof ing === 'string' ? ing : ing.name}</div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Main Instructions */}
+              <div style={{ flex: 1 }}>
+                <h3 style={{ fontSize: '10pt', fontWeight: 'bold', color: '#914730', borderBottom: '1.5px solid #914730', paddingBottom: '1.5mm', marginBottom: '3mm', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Modo de Preparo
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '3.5mm' }}>
+                  {recipe.instructions.map((step, i) => (
+                    <div key={i} style={{ display: 'flex', gap: '3mm' }}>
+                      <div style={{ flex: '0 0 6mm', height: '6mm', backgroundColor: '#914730', color: '#ffffff', borderRadius: '3px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '8pt' }}>
+                        {i + 1}
+                      </div>
+                      <p style={{ margin: 0, fontSize: '9pt', color: '#1c1917', lineHeight: '1.5', paddingTop: '0.5mm' }}>
+                        {step}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Contact */}
+            <div style={{ marginTop: '10mm', borderTop: '1px solid #d6d3d1', paddingTop: '3mm', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ fontSize: '7pt', color: '#78716c', fontWeight: 'bold' }}>ALQUIMIA DO PRATO © 2026</div>
+              <div style={{ fontSize: '7pt', color: '#914730', fontWeight: 'bold' }}>ALQUIMIADOPRATO.APP</div>
+            </div>
+          </div>
+        </div>
       </div>
     </motion.div>
   );

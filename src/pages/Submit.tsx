@@ -143,9 +143,20 @@ export default function Submit() {
         alert('Receita publicada com sucesso!');
       }
       navigate('/explore');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving recipe:', error);
-      alert('Erro ao salvar a receita. Verifique as regras de segurança.');
+      
+      let message = 'Erro ao salvar a receita. Verifique as regras de segurança.';
+      if (error?.message) {
+        try {
+          const parsed = JSON.parse(error.message.replace('Firestore operation failed: ', ''));
+          if (parsed.error) message = `Erro: ${parsed.error}`;
+        } catch (e) {
+          message = `Erro: ${error.message}`;
+        }
+      }
+      
+      alert(message);
     } finally {
       setLoading(false);
     }
