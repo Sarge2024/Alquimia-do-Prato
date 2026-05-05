@@ -15,6 +15,7 @@ export default function Submit() {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(isEditing);
   const [user, setUser] = useState(auth.currentUser);
+  const [imageOptions, setImageOptions] = useState<string[]>([]);
 
   const [formData, setFormData] = useState<Omit<Recipe, 'id' | 'ownerId' | 'createdAt' | 'updatedAt'>>({
     title: '',
@@ -22,6 +23,7 @@ export default function Submit() {
     image: '',
     category: 'Almoço',
     time: '',
+    prepTime: '',
     servings: '',
     difficulty: 'Médio',
     ingredients: [{ name: '', quantity: '' }],
@@ -36,6 +38,7 @@ export default function Submit() {
     if (isEditing) {
       loadRecipe(id);
     } else if (location.state?.scrapedData) {
+      setImageOptions(location.state.scrapedData.imageOptions || []);
       setFormData(prev => ({
         ...prev,
         ...location.state.scrapedData,
@@ -66,6 +69,7 @@ export default function Submit() {
           image: recipe.image || '',
           category: recipe.category,
           time: recipe.time || '',
+          prepTime: recipe.prepTime || '',
           servings: recipe.servings || '',
           difficulty: recipe.difficulty || 'Médio',
           ingredients: recipe.ingredients.map(ing => 
@@ -210,9 +214,20 @@ export default function Submit() {
               </select>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="space-y-2">
-              <label className="block font-semibold text-on-surface-variant">Tempo de Preparo</label>
+              <label className="block font-semibold text-on-surface-variant">Tempo de Preparação</label>
+              <input 
+                type="text" 
+                name="prepTime"
+                value={formData.prepTime}
+                onChange={handleInputChange}
+                placeholder="Ex: 15 min" 
+                className="w-full p-4 rounded-xl bg-surface-container border-none focus:ring-2 focus:ring-primary outline-none" 
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="block font-semibold text-on-surface-variant">Tempo Total</label>
               <input 
                 type="text" 
                 name="time"
@@ -278,6 +293,23 @@ export default function Submit() {
             {formData.image && (
               <div className="aspect-video w-full rounded-2xl overflow-hidden shadow-inner bg-stone-100 border border-stone-200">
                 <img src={formData.image} alt="Preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              </div>
+            )}
+            {imageOptions.length > 0 && (
+              <div className="space-y-4">
+                <label className="block font-semibold text-on-surface-variant">Outras imagens encontradas (Clique para substituir):</label>
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-4">
+                  {imageOptions.map((opt, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, image: opt }))}
+                      className={`aspect-square rounded-xl overflow-hidden border-2 transition-all ${formData.image === opt ? 'border-primary shadow-md scale-95' : 'border-transparent hover:border-stone-300'}`}
+                    >
+                      <img src={opt} alt={`Option ${idx}`} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
             {!formData.image && (

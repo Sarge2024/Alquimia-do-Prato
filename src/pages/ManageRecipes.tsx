@@ -61,9 +61,9 @@ export default function ManageRecipes() {
     try {
       const data = await recipeService.scrapeRecipe(scrapeUrl);
       navigate('/submit', { state: { scrapedData: data } });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Scraping error:', error);
-      alert('Erro ao buscar receita da URL. Verifique se o link está correto.');
+      alert(error.message || 'Erro ao buscar receita da URL. Verifique se o link está correto.');
     } finally {
       setScraping(false);
     }

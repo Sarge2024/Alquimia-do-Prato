@@ -64,6 +64,7 @@ export interface Recipe {
   image?: string;
   category: string;
   time?: string;
+  prepTime?: string; // Tempo de Preparação
   servings?: string;
   difficulty?: string;
   ingredients: (string | Ingredient)[]; // Maintain string support for backward compatibility/simplicity
@@ -318,12 +319,21 @@ export const recipeService = {
       body: JSON.stringify({ url })
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Falha ao buscar a página');
+    let responseData;
+    try {
+      responseData = await response.json();
+    } catch (e) {
+      console.error('Failed to parse proxy response as JSON:', e);
+      // If parsing fails (e.g. redirected to HTML page), fallback to URL only
+      return await geminiService.extractRecipeFromHtml("", { url });
+    }
+    
+    if (!responseData.success) {
+      console.warn(`Scraping direct fetch failed: ${responseData.error || 'Unknown error'}. Attempting search-based extraction for: ${url}`);
+      return await geminiService.extractRecipeFromHtml("", { url });
     }
 
-    const { html, metaDescription, ogImage } = await response.json();
-    return await geminiService.extractRecipeFromHtml(html, { metaDescription, ogImage });
+    const { html, metaDescription, ogImage, allImagesFound } = responseData;
+    return await geminiService.extractRecipeFromHtml(html, { metaDescription, ogImage, allImagesFound });
   }
 };

@@ -258,14 +258,23 @@ export default function RecipeDetail() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 py-6 border-y border-stone-200">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-6 py-6 border-y border-stone-200">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary">
                 <Clock className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-xs text-on-surface-variant font-bold uppercase tracking-wider">Tempo</p>
-                <p className="font-semibold">{recipe.time || 'N/A'}</p>
+                <p className="text-xs text-on-surface-variant font-bold uppercase tracking-wider text-[10px]">Preparação</p>
+                <p className="font-semibold text-sm">{recipe.prepTime || 'N/A'}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary">
+                <Clock className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-xs text-on-surface-variant font-bold uppercase tracking-wider text-[10px]">Tempo Total</p>
+                <p className="font-semibold text-sm">{recipe.time || 'N/A'}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -273,8 +282,8 @@ export default function RecipeDetail() {
                 <Utensils className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-xs text-on-surface-variant font-bold uppercase tracking-wider">Porções</p>
-                <p className="font-semibold">{recipe.servings || 'N/A'}</p>
+                <p className="text-xs text-on-surface-variant font-bold uppercase tracking-wider text-[10px]">Porções</p>
+                <p className="font-semibold text-sm">{recipe.servings || 'N/A'}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -282,17 +291,17 @@ export default function RecipeDetail() {
                 <Printer className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-xs text-on-surface-variant font-bold uppercase tracking-wider">Dificuldade</p>
-                <p className="font-semibold">{recipe.difficulty || 'Médio'}</p>
+                <p className="text-xs text-on-surface-variant font-bold uppercase tracking-wider text-[10px]">Dificuldade</p>
+                <p className="font-semibold text-sm">{recipe.difficulty || 'Médio'}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 col-span-2 pt-4 border-t border-stone-100">
               <div className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary">
                 <Heart className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-xs text-on-surface-variant font-bold uppercase tracking-wider">Avaliação</p>
-                <p className="font-semibold">{recipe.rating?.toFixed(1) || '0.0'} ({recipe.reviewsCount || 0} avaliações)</p>
+                <p className="text-xs text-on-surface-variant font-bold uppercase tracking-wider text-[10px]">Avaliação</p>
+                <p className="font-semibold text-sm">{recipe.rating?.toFixed(1) || '0.0'} ({recipe.reviewsCount || 0} avaliações)</p>
               </div>
             </div>
           </div>
