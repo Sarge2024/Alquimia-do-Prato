@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Search, Bookmark, User, Share2, Mail, LogOut, LogIn, X, Menu } from 'lucide-react';
 import { auth } from '../lib/firebase';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, User as FirebaseUser, browserPopupRedirectResolver } from 'firebase/auth';
+import { APP_VERSION } from '../constants';
 
 interface LayoutProps {
   children: ReactNode;
@@ -208,7 +209,7 @@ export default function Layout({ children }: LayoutProps) {
               <span className="text-2xl font-bold text-primary">Alquimia do Prato</span>
               <p className="text-on-surface-variant text-center md:text-left">
                 © 2026 Alquimia do Prato. A magia da cozinha acessível a todos, em todo lugar.
-                <span className="block mt-1 text-[10px] font-bold opacity-50 uppercase tracking-widest">Revisão 2.0</span>
+                <span className="block mt-1 text-[10px] font-bold opacity-50 uppercase tracking-widest">v{APP_VERSION}</span>
               </p>
             </div>
             <div className="grid grid-cols-2 sm:flex gap-8 text-on-surface-variant font-semibold">

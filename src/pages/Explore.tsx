@@ -220,9 +220,19 @@ export default function Explore() {
         {/* Filters Sidebar */}
         <aside className="w-full md:w-64 space-y-8">
           <div>
-            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-              <Filter className="w-5 h-5" /> Filtros
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold flex items-center gap-2">
+                <Filter className="w-5 h-5" /> Filtros
+              </h3>
+              {searchParams.toString() && (
+                <button 
+                  onClick={clearFilter}
+                  className="text-xs font-bold text-primary hover:bg-primary/5 px-2 py-1 rounded-lg transition-colors flex items-center gap-1"
+                >
+                  <X className="w-3 h-3" /> Limpar
+                </button>
+              )}
+            </div>
             <div className="space-y-4">
               {/* Momento Filter */}
               <div className="p-4 bg-surface-container rounded-xl">
