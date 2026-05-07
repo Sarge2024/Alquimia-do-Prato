@@ -5,13 +5,13 @@
 
 export const ASSETS = {
   MANIFESTO: {
-    VISION_HERO: 'https://lh3.googleusercontent.com/gg-dl/AFfU-fISYXErz473NUglG9DBjTmmH1VvA-CNb5pO44ZlpfG3ifF5lcntOY4LH4ldIldK7ZZF0_FI58Y_cyE2a8osFRsenB-AQfwssnbjX7eB_L0o2K-0lsKk4n874CsMKRokdC-5AmPUHVy8dCarE2LXeY2Cdt29kSA1S5XJgwmla5Jlcaem=s1024-rj',
+    VISION_HERO: 'https://images.unsplash.com/photo-1504387828636-adeb507f7ced?auto=format&fit=crop&q=80&w=1400',
     STORY_DECOR: 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&q=80',
   },
   HOME: {
-    HERO: 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&q=80&w=1200',
-    COMMUNITY: 'https://lh3.googleusercontent.com/d/1-jM6qODVnceVhAS7ULlwrUizuBl0IxNS',
-    COLLABORATOR_REGISTER: 'https://lh3.googleusercontent.com/d/1-jM6qODVnceVhAS7ULlwrUizuBl0IxNS',
+    HERO: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=1400',
+    COMMUNITY: 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&q=80&w=1200',
+    COLLABORATOR_REGISTER: 'https://images.unsplash.com/photo-1543353071-873f17a7a088?auto=format&fit=crop&q=80&w=1200',
   },
   CATEGORIES: {
     BREAKFAST: 'https://images.unsplash.com/photo-1493770348161-369560ae357d?auto=format&fit=crop&q=80&w=800',
@@ -61,9 +61,11 @@ export const getAssetUrl = (path: string | undefined | null) => {
     finalPath = '/' + finalPath.replace('public/', '');
   }
 
-  // If it's a filename starting with 'recipe-' but doesn't have a folder, assume it's an upload
-  if (finalPath.startsWith('recipe-')) {
-    finalPath = '/uploads/' + finalPath;
+  // Handle case where path is just the filename 'recipe-...' or '/recipe-...'
+  // without the '/uploads/' prefix
+  const recipeMatch = finalPath.match(/^\/?(recipe-.*)$/);
+  if (recipeMatch && !finalPath.includes('uploads')) {
+    finalPath = '/uploads/' + recipeMatch[1];
   }
 
   // Ensure it starts with a /
@@ -71,11 +73,13 @@ export const getAssetUrl = (path: string | undefined | null) => {
     finalPath = '/' + finalPath;
   }
 
-  // Prevent double slashes at the beginning
-  finalPath = finalPath.replace(/^\/{2,}/, '/');
+  // Prevent double slashes throughout the path (except for http://)
+  if (!finalPath.startsWith('http')) {
+    finalPath = finalPath.replace(/\/+/g, '/');
+  }
 
   // If path is basically empty after stripping, return default
-  if (finalPath === '/') return ASSETS.DEFAULT_RECIPE;
+  if (finalPath === '/' || finalPath === '') return ASSETS.DEFAULT_RECIPE;
   
   return finalPath;
 };
