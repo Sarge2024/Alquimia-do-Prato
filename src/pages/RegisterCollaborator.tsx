@@ -417,6 +417,9 @@ export default function RegisterCollaborator() {
                 alt="Community Gathering" 
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 opacity-80"
                 referrerPolicy="no-referrer"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = ASSETS.HOME.COMMUNITY;
+                }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-transparent to-transparent opacity-60" />
             </div>

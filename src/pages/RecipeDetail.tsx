@@ -426,7 +426,15 @@ export default function RecipeDetail() {
           className="rounded-3xl overflow-hidden shadow-2xl h-[500px] bg-stone-100"
         >
           {recipe.image ? (
-            <img src={getAssetUrl(recipe.image)} alt={recipe.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+            <img 
+              src={getAssetUrl(recipe.image)} 
+              alt={recipe.title} 
+              className="w-full h-full object-cover" 
+              referrerPolicy="no-referrer" 
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = ASSETS.DEFAULT_RECIPE;
+              }}
+            />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-stone-300 font-bold uppercase tracking-widest text-4xl">
               Alquimia

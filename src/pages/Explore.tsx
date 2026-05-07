@@ -425,7 +425,15 @@ export default function Explore() {
                           >
                             <div className="w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden flex-shrink-0 bg-stone-200">
                               {recipe.image ? (
-                                <img src={getAssetUrl(recipe.image)} alt={recipe.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" referrerPolicy="no-referrer" />
+                                <img 
+                                  src={getAssetUrl(recipe.image)} 
+                                  alt={recipe.title} 
+                                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                                  referrerPolicy="no-referrer" 
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src = ASSETS.DEFAULT_RECIPE;
+                                  }}
+                                />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center text-[10px] text-stone-400 font-bold uppercase">N/A</div>
                               )}

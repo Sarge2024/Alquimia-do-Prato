@@ -101,6 +101,9 @@ export default function Manifesto() {
                 alt="Nossa Visão Gastronômica" 
                 className="w-full h-auto object-cover"
                 referrerPolicy="no-referrer"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = ASSETS.HOME.HERO;
+                }}
               />
             </motion.div>
           </section>

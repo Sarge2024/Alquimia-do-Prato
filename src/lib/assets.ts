@@ -61,10 +61,18 @@ export const getAssetUrl = (path: string | undefined | null) => {
     finalPath = '/' + finalPath.replace('public/', '');
   }
 
+  // If it's a filename starting with 'recipe-' but doesn't have a folder, assume it's an upload
+  if (finalPath.startsWith('recipe-')) {
+    finalPath = '/uploads/' + finalPath;
+  }
+
   // Ensure it starts with a /
   if (!finalPath.startsWith('/')) {
     finalPath = '/' + finalPath;
   }
+
+  // Prevent double slashes at the beginning
+  finalPath = finalPath.replace(/^\/{2,}/, '/');
 
   // If path is basically empty after stripping, return default
   if (finalPath === '/') return ASSETS.DEFAULT_RECIPE;
