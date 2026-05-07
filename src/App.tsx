@@ -8,6 +8,7 @@ import RecipeDetail from './pages/RecipeDetail';
 import ManageRecipes from './pages/ManageRecipes';
 import AdminDashboard from './pages/AdminDashboard';
 import Manifesto from './pages/Manifesto';
+import RegisterCollaborator from './pages/RegisterCollaborator';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -20,6 +21,7 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/explore" element={<Explore />} />
             <Route path="/categories" element={<Categories />} />
+            <Route path="/register-collaborator" element={<RegisterCollaborator />} />
             
             {/* Protected Client Routes */}
             <Route path="/submit" element={<ProtectedRoute><Submit /></ProtectedRoute>} />

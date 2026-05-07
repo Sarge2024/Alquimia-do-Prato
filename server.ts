@@ -51,11 +51,17 @@ async function startServer() {
     fallthrough: true,
     setHeaders: (res) => {
       res.set('Access-Control-Allow-Origin', '*');
+      res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+      res.set('Cache-Control', 'public, max-age=3600');
     }
   }));
 
   // Also serve root public for any other assets
-  app.use(express.static(path.resolve(process.cwd(), 'public')));
+  app.use(express.static(path.resolve(process.cwd(), 'public'), {
+    setHeaders: (res) => {
+      res.set('Access-Control-Allow-Origin', '*');
+    }
+  }));
 
   // API Route for File Upload
   app.post("/api/upload", upload.single("image"), (req, res) => {

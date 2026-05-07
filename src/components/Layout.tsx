@@ -76,6 +76,7 @@ export default function Layout({ children }: LayoutProps) {
     { path: '/explore', label: 'Explorar' },
     { path: '/categories', label: 'Categorias' },
     { path: '/submit', label: 'Enviar' },
+    { path: '/register-collaborator', label: 'Seja um Colaborador' },
   ];
 
   return (

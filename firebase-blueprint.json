@@ -56,12 +56,34 @@
         "isClassic": { "type": "boolean", "description": "Se é uma receita clássica com história registrada" }
       },
       "required": ["title", "momento", "tipo_prato", "base_alimento", "ingredients", "instructions", "ownerId"]
+    },
+    "User": {
+      "title": "User",
+      "description": "Perfil de usuário/colaborador do Alquimia do Prato",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "UID do Firebase Auth" },
+        "displayName": { "type": "string", "description": "Nome completo" },
+        "email": { "type": "string", "description": "E-mail de contato" },
+        "photoURL": { "type": "string", "description": "URL da foto de perfil" },
+        "whatsapp": { "type": "string", "description": "Número do WhatsApp (opcional)" },
+        "state": { "type": "string", "description": "Estado" },
+        "country": { "type": "string", "description": "País" },
+        "role": { "type": "string", "enum": ["user", "collaborator", "admin"], "description": "Papel do usuário" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "displayName", "email", "state", "country"]
     }
   },
   "firestore": {
     "recipes": {
       "schema": "Recipe",
       "description": "Coleção central de todas as receitas do Alquimia do Prato"
+    },
+    "users": {
+      "schema": "User",
+      "description": "Perfil dos usuários e colaboradores"
     }
   }
 }

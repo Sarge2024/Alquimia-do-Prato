@@ -48,9 +48,37 @@ service cloud.firestore {
         && (data.reviewsCount is number && data.reviewsCount >= 0);
     }
 
+    function isValidUser(data) {
+      return (data.displayName is string && data.displayName.size() <= 200)
+        && (data.email is string && data.email.size() <= 200)
+        && (data.state is string && data.state.size() <= 100)
+        && (data.country is string && data.country.size() <= 100)
+        && (data.role in ['user', 'collaborator', 'admin']);
+    }
+
     // --- Collections ---
     match /test/connection {
       allow read: if true;
+    }
+
+    match /users/{userId} {
+      allow get: if isSignedIn();
+      allow list: if isAdmin();
+      
+      allow create: if isVerified() 
+        && isOwner(userId)
+        && incoming().uid == userId
+        && (incoming().role == 'collaborator' || incoming().role == 'user')
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && isValidUser(incoming());
+        
+      allow update: if isVerified()
+        && isOwner(userId)
+        && incoming().uid == userId
+        && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'whatsapp', 'state', 'country', 'updatedAt'])
+        && incoming().updatedAt == request.time
+        && isValidUser(incoming());
     }
 
     match /recipes/{recipeId} {

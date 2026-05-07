@@ -11,6 +11,7 @@ export const ASSETS = {
   HOME: {
     HERO: 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&q=80&w=1200',
     COMMUNITY: 'https://lh3.googleusercontent.com/d/1-jM6qODVnceVhAS7ULlwrUizuBl0IxNS',
+    COLLABORATOR_REGISTER: 'https://lh3.googleusercontent.com/d/1-jM6qODVnceVhAS7ULlwrUizuBl0IxNS',
   },
   CATEGORIES: {
     BREAKFAST: 'https://images.unsplash.com/photo-1493770348161-369560ae357d?auto=format&fit=crop&q=80&w=800',
@@ -41,10 +42,8 @@ export const ASSETS = {
 export const getAssetUrl = (path: string | undefined | null) => {
   if (!path) return ASSETS.DEFAULT_RECIPE;
   
-  // Clean up the path (remove leading whitespace)
   const cleanPath = path.trim();
   
-  // Return as is if it's already a full URL, absolute path (well-formed), or blob/data URI
   if (
     cleanPath.startsWith('http') || 
     cleanPath.startsWith('blob:') || 
@@ -53,25 +52,22 @@ export const getAssetUrl = (path: string | undefined | null) => {
     return cleanPath;
   }
 
-  // Handle absolute paths
-  if (cleanPath.startsWith('/')) {
-    // If it starts with /public, remove it as it's the root of the server
-    if (cleanPath.startsWith('/public/')) {
-        return cleanPath.replace('/public/', '/');
-    }
-    return cleanPath;
-  }
+  let finalPath = cleanPath;
   
-  // If it's a relative path starting with 'uploads/', it belongs to the uploads folder
-  if (cleanPath.startsWith('uploads/')) {
-    return `/${cleanPath}`;
+  // Strip /public/ or public/ prefix if present
+  if (finalPath.startsWith('/public/')) {
+    finalPath = finalPath.replace('/public/', '/');
+  } else if (finalPath.startsWith('public/')) {
+    finalPath = '/' + finalPath.replace('public/', '');
   }
 
-  // If it's a relative path starting with 'public/', remove 'public/' and add '/'
-  if (cleanPath.startsWith('public/')) {
-    return `/${cleanPath.replace('public/', '')}`;
+  // Ensure it starts with a /
+  if (!finalPath.startsWith('/')) {
+    finalPath = '/' + finalPath;
   }
+
+  // If path is basically empty after stripping, return default
+  if (finalPath === '/') return ASSETS.DEFAULT_RECIPE;
   
-  // For any other relative path, assume it's from the root
-  return `/${cleanPath}`;
+  return finalPath;
 };
