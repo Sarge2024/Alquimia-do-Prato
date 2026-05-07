@@ -3,9 +3,40 @@ import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
 import { JSDOM } from "jsdom";
+import multer from "multer";
+import fs from "fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Ensure upload directory exists
+const uploadDir = path.join(process.cwd(), "public", "uploads");
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const ext = path.extname(file.originalname);
+    cb(null, "recipe-" + uniqueSuffix + ext);
+  },
+});
+
+const upload = multer({ 
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Apenas imagens são permitidas"));
+    }
+  }
+});
 
 async function startServer() {
   const app = express();
@@ -13,14 +44,44 @@ async function startServer() {
 
   app.use(express.json());
 
+  // Serve static files from public/uploads
+  const uploadsPath = path.resolve(process.cwd(), 'public', 'uploads');
+  console.log(`Configuring static serving for /uploads from: ${uploadsPath}`);
+  app.use('/uploads', express.static(uploadsPath, {
+    fallthrough: true,
+    setHeaders: (res) => {
+      res.set('Access-Control-Allow-Origin', '*');
+    }
+  }));
+
+  // Also serve root public for any other assets
+  app.use(express.static(path.resolve(process.cwd(), 'public')));
+
+  // API Route for File Upload
+  app.post("/api/upload", upload.single("image"), (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ error: "Nenhum arquivo enviado" });
+    }
+    const imageUrl = `/uploads/${req.file.filename}`;
+    res.json({ success: true, imageUrl });
+  });
+
   // API Route for Fetching HTML (proxy to avoid CORS)
   app.post("/api/fetch-html", async (req, res) => {
-    const { url } = req.body;
+    let { url } = req.body;
     if (!url) {
       return res.status(400).json({ error: "URL is required" });
     }
 
+    // Basic URL normalization
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      url = 'https://' + url;
+    }
+
     try {
+      // Validate URL format
+      new URL(url);
+
       const response = await fetch(url, {
         headers: {
           "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",

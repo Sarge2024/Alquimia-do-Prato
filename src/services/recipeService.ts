@@ -14,6 +14,7 @@ import {
 } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
 import { geminiService } from './geminiService';
+import { ASSETS } from '../lib/assets';
 
 export enum OperationType {
   CREATE = 'create',
@@ -52,9 +53,36 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
   throw new Error(`Firestore operation failed: ${errInfo.error}`);
 }
 
+/**
+ * Recursively removes undefined values from an object or array
+ * to prevent Firestore "Unsupported field value: undefined" errors.
+ */
+function deepSanitize<T>(obj: T): T {
+  if (obj === undefined) return null as any;
+  if (obj === null || typeof obj !== 'object') return obj;
+
+  if (Array.isArray(obj)) {
+    return obj
+      .filter(item => item !== undefined)
+      .map(item => deepSanitize(item)) as any;
+  }
+
+  const result: any = {};
+  for (const key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      const value = (obj as any)[key];
+      if (value !== undefined) {
+        result[key] = deepSanitize(value);
+      }
+    }
+  }
+  return result;
+}
+
 export interface Ingredient {
   name: string;
   quantity: string;
+  group?: string;
 }
 
 export interface Recipe {
@@ -79,6 +107,8 @@ export interface Recipe {
   updatedAt?: any;
   rating?: number;
   reviewsCount?: number;
+  isClassic?: boolean;
+  imageOptions?: string[];
 }
 
 const RECIPES_COLLECTION = 'recipes';
@@ -86,8 +116,9 @@ const RECIPES_COLLECTION = 'recipes';
 export const recipeService = {
   async createRecipe(recipe: Omit<Recipe, 'id' | 'createdAt' | 'updatedAt'>) {
     try {
+      const sanitizedRecipe = deepSanitize(recipe);
       const docRef = await addDoc(collection(db, RECIPES_COLLECTION), {
-        ...recipe,
+        ...sanitizedRecipe,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         rating: 4.5, // Default rating for new recipes
@@ -101,9 +132,10 @@ export const recipeService = {
 
   async updateRecipe(id: string, recipe: Partial<Recipe>) {
     try {
+      const sanitizedRecipe = deepSanitize(recipe);
       const docRef = doc(db, RECIPES_COLLECTION, id);
       await updateDoc(docRef, {
-        ...recipe,
+        ...sanitizedRecipe,
         updatedAt: serverTimestamp()
       });
     } catch (error) {
@@ -215,7 +247,7 @@ export const recipeService = {
         servings: '1',
         rating: 4.9,
         reviewsCount: 45,
-        image: 'https://images.unsplash.com/photo-1541519227354-08fa5d50c44d?auto=format&fit=crop&q=80&w=800',
+        image: ASSETS.MOCKS.TAPIOCA,
         ingredients: [
           { name: 'goma de tapioca peneirada', quantity: '100g' },
           { name: 'queijo coalho ralado grosso', quantity: '50g' },
@@ -230,7 +262,8 @@ export const recipeService = {
           'Vire a tapioca para dourar levemente o lado da massa.',
           'Adicione o recheio escolhido, dobre ao meio e finalize com um fio de manteiga de garrafa.'
         ],
-        ownerId: userId
+        ownerId: userId,
+        isClassic: true
       },
       {
         title: 'Feijoada Completa Tradicional',
@@ -245,7 +278,7 @@ export const recipeService = {
         servings: '6',
         rating: 5.0,
         reviewsCount: 128,
-        image: 'https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?auto=format&fit=crop&q=80&w=800',
+        image: ASSETS.MOCKS.FEIJOADA,
         ingredients: [
           { name: 'feijão preto', quantity: '500g' },
           { name: 'carne seca', quantity: '200g' },
@@ -260,9 +293,10 @@ export const recipeService = {
           'Adicione as carnes mais macias e as linguiças no meio do processo.',
           'Faça um refogado com alho, cebola e um pouco do caldo da feijoada e retorne à panela.',
           'Deixe apurar o caldo até engrossar.',
-          'Sirva com os acompanhamentos tradicionais.'
+          'Sirva with os acompanhamentos tradicionais.'
         ],
-        ownerId: userId
+        ownerId: userId,
+        isClassic: true
       },
       {
         title: 'Salmão com Crosta de Ervas',
@@ -277,7 +311,7 @@ export const recipeService = {
         servings: '2',
         rating: 4.8,
         reviewsCount: 67,
-        image: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&q=80&w=800',
+        image: ASSETS.MOCKS.SALMON,
         ingredients: [
           { name: 'Filés de salmão', quantity: '2' },
           { name: 'Salsa e alecrim picados', quantity: 'a gosto' },
@@ -286,7 +320,7 @@ export const recipeService = {
           { name: 'Sal e pimenta a gosto', quantity: '' }
         ],
         instructions: [
-          'Tempere os filés com sal e pimenta.',
+          'Tempere os filés with sal e pimenta.',
           'Misture as ervas com as raspas de limão e um pouco de azeite.',
           'Pressione a mistura sobre o topo dos filés de salmão.',
           'Leve ao forno pré-aquecido a 200°C por cerca de 12-15 minutos.',
@@ -298,7 +332,7 @@ export const recipeService = {
         title: 'Pudim de Leite Condensado',
         description: 'O clássico dos domingos brasileiros. Textura aveludada, sem furinhos e uma calda de caramelo brilhante.',
         momento: ['Lanche / Chá da Tarde', 'Ceia'],
-        tipo_prato: ['Assados'],
+        tipo_prato: ['Doces e Sobremesas'],
         base_alimento: ['Ovos e Laticínios'],
         origem: 'Brasileira',
         time: '1h 30min',
@@ -307,7 +341,7 @@ export const recipeService = {
         servings: '8',
         rating: 4.9,
         reviewsCount: 210,
-        image: 'https://images.unsplash.com/photo-1528975604071-b4dc52a2d18c?auto=format&fit=crop&q=80&w=800',
+        image: ASSETS.MOCKS.BRUNCH,
         ingredients: [
           { name: 'leite condensado', quantity: '1 lata' },
           { name: 'leite integral', quantity: '2 latas' },
@@ -321,7 +355,8 @@ export const recipeService = {
           'Cozinhe em banho-maria no forno por cerca de 1 hora.',
           'Deixe esfriar e leve à geladeira por pelo menos 4 horas antes de desenformar.'
         ],
-        ownerId: userId
+        ownerId: userId,
+        isClassic: true
       }
     ];
 

@@ -13,6 +13,7 @@ export default function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -30,7 +31,12 @@ export default function Layout({ children }: LayoutProps) {
 
   const handleLogin = async () => {
     setAuthError(null);
+    setIsLoggingIn(true);
     const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({
+      prompt: 'select_account'
+    });
+
     try {
       // Use browserPopupRedirectResolver to improve compatibility in iframe/popup environments
       await signInWithPopup(auth, provider, browserPopupRedirectResolver);
@@ -39,10 +45,15 @@ export default function Layout({ children }: LayoutProps) {
       if (error.code === 'auth/popup-blocked') {
         setAuthError('O popup foi bloqueado pelo seu navegador. Por favor, permita popups para este site.');
       } else if (error.code === 'auth/cancelled-popup-request' || error.code === 'auth/popup-closed-by-user') {
-        // Just user closing the popup, no need to show a big error unless it's persistent
+        // Just user closing the popup
+      } else if (error.code === 'auth/unauthorized-domain') {
+        const domain = window.location.hostname;
+        setAuthError(`Domínio não autorizado. O Firebase não reconhece "${domain}". No Console do Firebase (Authentication > Settings > Authorized Domains), certifique-se de adicionar EXATAMENTE: "${domain}" (sem https:// nem barras).`);
       } else {
-        setAuthError(`Erro ao entrar: ${error.message}. Verifique se o domínio está autorizado no console do Firebase.`);
+        setAuthError(`Erro ao entrar: ${error.message} (Código: ${error.code})`);
       }
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -146,9 +157,17 @@ export default function Layout({ children }: LayoutProps) {
                   </button>
                 </div>
               ) : (
-                <button onClick={handleLogin} className="hover:text-primary transition-colors flex items-center gap-2 font-semibold text-sm">
-                  <LogIn className="w-6 h-6 shrink-0" />
-                  <span className="hidden sm:inline">Entrar</span>
+                <button 
+                  onClick={handleLogin} 
+                  disabled={isLoggingIn}
+                  className={`flex items-center gap-2 font-semibold text-sm transition-all ${isLoggingIn ? 'opacity-50 cursor-wait' : 'hover:text-primary'}`}
+                >
+                  {isLoggingIn ? (
+                    <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin mr-2" />
+                  ) : (
+                    <LogIn className="w-6 h-6 shrink-0" />
+                  )}
+                  <span className="hidden sm:inline">{isLoggingIn ? 'Conectando...' : 'Entrar'}</span>
                 </button>
               )}
             </div>

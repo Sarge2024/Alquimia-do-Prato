@@ -1,34 +1,24 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { Trash2, Shield, Loader2, Search, Filter, AlertTriangle, User, Calendar, ExternalLink } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { recipeService, Recipe } from '../services/recipeService';
-import { auth } from '../lib/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
-
-const ADMIN_EMAIL = 'sagacitas.sistemas@gmail.com';
+import { useAuth } from '../context/AuthContext';
+import { getAssetUrl } from '../lib/assets';
 
 export default function AdminDashboard() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [user, setUser] = useState(auth.currentUser);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const navigate = useNavigate();
+  const { user, isAdmin } = useAuth();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
-      setUser(u);
-      if (!u || u.email !== ADMIN_EMAIL) {
-        navigate('/');
-      } else {
-        fetchAllRecipes();
-      }
-    });
-
-    return () => unsubscribe();
-  }, [navigate]);
+    if (isAdmin) {
+      fetchAllRecipes();
+    }
+  }, [isAdmin]);
 
   const fetchAllRecipes = async () => {
     try {
@@ -123,7 +113,7 @@ export default function AdminDashboard() {
                     <div className="flex items-center gap-4">
                       <div className="w-16 h-16 rounded-2xl overflow-hidden bg-stone-100 flex-shrink-0">
                         {recipe.image ? (
-                          <img src={recipe.image} alt={recipe.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                          <img src={getAssetUrl(recipe.image)} alt={recipe.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-stone-300 text-[10px] font-bold">N/A</div>
                         )}

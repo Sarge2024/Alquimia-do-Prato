@@ -1,0 +1,77 @@
+/**
+ * Central de Ativos do Projeto
+ * Facilita a manutenção e troca de imagens em todo o ecossistema.
+ */
+
+export const ASSETS = {
+  MANIFESTO: {
+    VISION_HERO: 'https://lh3.googleusercontent.com/gg-dl/AFfU-fISYXErz473NUglG9DBjTmmH1VvA-CNb5pO44ZlpfG3ifF5lcntOY4LH4ldIldK7ZZF0_FI58Y_cyE2a8osFRsenB-AQfwssnbjX7eB_L0o2K-0lsKk4n874CsMKRokdC-5AmPUHVy8dCarE2LXeY2Cdt29kSA1S5XJgwmla5Jlcaem=s1024-rj',
+    STORY_DECOR: 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&q=80',
+  },
+  HOME: {
+    HERO: 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&q=80&w=1200',
+    COMMUNITY: 'https://lh3.googleusercontent.com/d/1-jM6qODVnceVhAS7ULlwrUizuBl0IxNS',
+  },
+  CATEGORIES: {
+    BREAKFAST: 'https://images.unsplash.com/photo-1493770348161-369560ae357d?auto=format&fit=crop&q=80&w=800',
+    LUNCH: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&q=80&w=800',
+    DINNER: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&q=80&w=800',
+    DRINKS: 'https://images.unsplash.com/photo-1541529086526-db283c563270?auto=format&fit=crop&q=80&w=800',
+    DESSERTS: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&q=80&w=800',
+    SNACKS: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&q=80&w=800',
+  },
+  MOCKS: {
+    TAPIOCA: 'https://images.unsplash.com/photo-1541519227354-08fa5d50c44d?auto=format&fit=crop&q=80&w=800',
+    FEIJOADA: 'https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?auto=format&fit=crop&q=80&w=800',
+    SALMON: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&q=80&w=800',
+    BRUNCH: 'https://images.unsplash.com/photo-1528975604071-b4dc52a2d18c?auto=format&fit=crop&q=80&w=800',
+  },
+  BRAND: {
+    LOGO_PLACEHOLDER: 'https://images.unsplash.com/photo-1547517023-7ca0c162f816?auto=format&fit=crop&q=80&w=200',
+    FAVICON: '/favicon.ico',
+  },
+  DEFAULT_RECIPE: 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?auto=format&fit=crop&q=80',
+};
+
+/**
+ * Helper para resolver caminhos de imagem.
+ * Se a imagem começar com http, retorna ela mesma.
+ * Se for apenas um nome de arquivo, assume que está em /assets/images/
+ */
+export const getAssetUrl = (path: string | undefined | null) => {
+  if (!path) return ASSETS.DEFAULT_RECIPE;
+  
+  // Clean up the path (remove leading whitespace)
+  const cleanPath = path.trim();
+  
+  // Return as is if it's already a full URL, absolute path (well-formed), or blob/data URI
+  if (
+    cleanPath.startsWith('http') || 
+    cleanPath.startsWith('blob:') || 
+    cleanPath.startsWith('data:')
+  ) {
+    return cleanPath;
+  }
+
+  // Handle absolute paths
+  if (cleanPath.startsWith('/')) {
+    // If it starts with /public, remove it as it's the root of the server
+    if (cleanPath.startsWith('/public/')) {
+        return cleanPath.replace('/public/', '/');
+    }
+    return cleanPath;
+  }
+  
+  // If it's a relative path starting with 'uploads/', it belongs to the uploads folder
+  if (cleanPath.startsWith('uploads/')) {
+    return `/${cleanPath}`;
+  }
+
+  // If it's a relative path starting with 'public/', remove 'public/' and add '/'
+  if (cleanPath.startsWith('public/')) {
+    return `/${cleanPath.replace('public/', '')}`;
+  }
+  
+  // For any other relative path, assume it's from the root
+  return `/${cleanPath}`;
+};

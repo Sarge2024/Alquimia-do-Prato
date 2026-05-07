@@ -1,11 +1,13 @@
 import { motion } from 'motion/react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Clock, Utensils, Heart, Share2, Printer, ChevronLeft, CheckCircle2, Edit3, Trash2, Loader2, Gauge, Facebook, Twitter, MessageCircle, X } from 'lucide-react';
+import { Clock, Utensils, Heart, Share2, Printer, ChevronLeft, CheckCircle2, Edit3, Trash2, Loader2, Gauge, Facebook, Twitter, MessageCircle, X, Star } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
-import { recipeService, Recipe } from '../services/recipeService';
+import { recipeService, Recipe, Ingredient } from '../services/recipeService';
 import { auth } from '../lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import html2pdf from 'html2pdf.js';
+
+import { ASSETS, getAssetUrl } from '../lib/assets';
 
 const MOCK_RECIPES_DETAIL: Record<string, Recipe> = {
   'tapioca-rendada': {
@@ -21,7 +23,7 @@ const MOCK_RECIPES_DETAIL: Record<string, Recipe> = {
     servings: '1',
     rating: 4.9,
     reviewsCount: 45,
-    image: 'https://images.unsplash.com/photo-1541519227354-08fa5d50c44d?auto=format&fit=crop&q=80&w=800',
+    image: ASSETS.MOCKS.TAPIOCA,
     ingredients: [
       { name: 'goma de tapioca peneirada', quantity: '100g' },
       { name: 'queijo coalho ralado grosso', quantity: '50g' },
@@ -52,7 +54,7 @@ const MOCK_RECIPES_DETAIL: Record<string, Recipe> = {
     servings: '6',
     rating: 5.0,
     reviewsCount: 128,
-    image: 'https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?auto=format&fit=crop&q=80&w=800',
+    image: ASSETS.MOCKS.FEIJOADA,
     ingredients: [
       { name: 'feijão preto', quantity: '500g' },
       { name: 'carne seca', quantity: '200g' },
@@ -85,7 +87,7 @@ const MOCK_RECIPES_DETAIL: Record<string, Recipe> = {
     servings: '2',
     rating: 4.8,
     reviewsCount: 67,
-    image: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&q=80&w=800',
+    image: ASSETS.MOCKS.SALMON,
     ingredients: [
       { name: 'Filés de salmão', quantity: '2' },
       { name: 'Salsa e alecrim picados', quantity: 'a gosto' },
@@ -94,7 +96,7 @@ const MOCK_RECIPES_DETAIL: Record<string, Recipe> = {
       { name: 'Sal e pimenta a gosto', quantity: '' }
     ],
     instructions: [
-      'Tempere os filés com sal e pimenta.',
+      'Tempere os filés with sal e pimenta.',
       'Misture as ervas com as raspas de limão e um pouco de azeite.',
       'Pressione a mistura sobre o topo dos filés de salmão.',
       'Leve ao forno pré-aquecido a 200°C por cerca de 12-15 minutos.',
@@ -116,7 +118,7 @@ const MOCK_RECIPES_DETAIL: Record<string, Recipe> = {
     servings: '8',
     rating: 4.9,
     reviewsCount: 210,
-    image: 'https://images.unsplash.com/photo-1528975604071-b4dc52a2d18c?auto=format&fit=crop&q=80&w=800',
+    image: ASSETS.MOCKS.BRUNCH,
     ingredients: [
       { name: 'leite condensado', quantity: '1 lata' },
       { name: 'leite integral', quantity: '2 latas' },
@@ -361,6 +363,23 @@ export default function RecipeDetail() {
   const isAdmin = user && user.email === 'sagacitas.sistemas@gmail.com';
   const canManage = isOwner || isAdmin;
 
+  // Helper to group ingredients
+  interface GroupedIngredients {
+    [key: string]: (string | Ingredient)[];
+  }
+
+  const groupedIngredients: GroupedIngredients = {};
+  recipe.ingredients.forEach(ing => {
+    const groupName = (typeof ing === 'object' && ing.group) ? ing.group : 'Geral';
+    if (!groupedIngredients[groupName]) {
+      groupedIngredients[groupName] = [];
+    }
+    groupedIngredients[groupName].push(ing);
+  });
+
+  const groupKeys = Object.keys(groupedIngredients);
+  const hasMultipleGroups = groupKeys.length > 1 || (groupKeys.length === 1 && groupKeys[0] !== 'Geral');
+
   return (
     <motion.div 
       initial={{ opacity: 0 }}
@@ -407,7 +426,7 @@ export default function RecipeDetail() {
           className="rounded-3xl overflow-hidden shadow-2xl h-[500px] bg-stone-100"
         >
           {recipe.image ? (
-            <img src={recipe.image} alt={recipe.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+            <img src={getAssetUrl(recipe.image)} alt={recipe.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-stone-300 font-bold uppercase tracking-widest text-4xl">
               Alquimia
@@ -418,6 +437,12 @@ export default function RecipeDetail() {
         {/* Content Header */}
         <div className="flex flex-col justify-center space-y-6">
           <div className="space-y-4">
+            {recipe.isClassic && (
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold uppercase tracking-wider">
+                <Star className="w-3 h-3 fill-primary" />
+                Receita Clássica
+              </div>
+            )}
             <h1 className="text-4xl md:text-5xl font-bold text-on-surface leading-tight font-sans">
               {recipe.title}
             </h1>
@@ -559,23 +584,34 @@ export default function RecipeDetail() {
         <aside className="lg:col-span-1 space-y-8">
           <div className="bg-surface-container-low p-8 rounded-3xl border border-stone-100">
             <h3 className="text-2xl font-bold mb-6 text-primary border-b border-primary/10 pb-4">Ingredientes</h3>
-            <ul className="space-y-4">
-              {recipe.ingredients.map((ing, i) => (
-                <li key={i} className="flex items-start gap-4 group cursor-pointer border-b border-primary/5 pb-2 last:border-0">
-                  <div className="mt-1 flex-shrink-0">
-                    <CheckCircle2 className="w-5 h-5 text-stone-300 group-hover:text-secondary transition-colors" />
-                  </div>
-                  <div className="flex flex-col">
-                    {typeof ing === 'object' && ing.quantity && (
-                      <span className="text-[10px] font-bold uppercase text-primary mb-0.5">{ing.quantity}</span>
-                    )}
-                    <span className="text-on-surface-variant group-hover:text-on-surface transition-colors font-medium">
-                      {typeof ing === 'string' ? ing : ing.name}
-                    </span>
-                  </div>
-                </li>
+            <div className="space-y-8">
+              {groupKeys.map(groupName => (
+                <div key={groupName} className="space-y-4">
+                  {hasMultipleGroups && (
+                    <h4 className="text-sm font-bold text-secondary uppercase tracking-widest bg-secondary/5 px-3 py-1 rounded-md inline-block">
+                      {groupName}
+                    </h4>
+                  )}
+                  <ul className="space-y-3">
+                    {groupedIngredients[groupName].map((ing, i) => (
+                      <li key={i} className="flex items-start gap-4 group cursor-pointer border-b border-primary/5 pb-2 last:border-0">
+                        <div className="mt-1 flex-shrink-0">
+                          <CheckCircle2 className="w-4 h-4 text-stone-300 group-hover:text-secondary transition-colors" />
+                        </div>
+                        <div className="flex flex-col">
+                          {typeof ing === 'object' && ing.quantity && (
+                            <span className="text-[10px] font-bold uppercase text-primary mb-0.5">{ing.quantity}</span>
+                          )}
+                          <span className="text-on-surface-variant group-hover:text-on-surface transition-colors font-medium text-sm">
+                            {typeof ing === 'string' ? ing : ing.name}
+                          </span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
         </aside>
 
@@ -614,7 +650,7 @@ export default function RecipeDetail() {
               <div style={{ flex: '0 0 70mm', height: '45mm', borderRadius: '8px', overflow: 'hidden', border: '1px solid #f5f5f4' }}>
                 {recipe.image && (
                   <img 
-                    src={recipe.image} 
+                    src={getAssetUrl(recipe.image)} 
                     alt={recipe.title} 
                     style={{ width: '100%', height: '100%', objectPosition: 'center', objectFit: 'cover' }} 
                     crossOrigin="anonymous" 
@@ -662,16 +698,27 @@ export default function RecipeDetail() {
                 <h3 style={{ fontSize: '10pt', fontWeight: 'bold', color: '#914730', borderBottom: '1.5px solid #914730', paddingBottom: '1.5mm', marginBottom: '3mm', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   Ingredientes
                 </h3>
-                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                  {recipe.ingredients.map((ing, i) => (
-                    <li key={i} style={{ paddingBottom: '1.5mm', borderBottom: '1px solid #f5f5f4', marginBottom: '1.5mm' }}>
-                      {typeof ing === 'object' && ing.quantity && (
-                        <div style={{ fontSize: '7pt', fontWeight: 'bold', color: '#914730', marginBottom: '0.5pt' }}>{ing.quantity}</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4mm' }}>
+                  {groupKeys.map(groupName => (
+                    <div key={groupName} style={{ marginBottom: hasMultipleGroups ? '3mm' : '0' }}>
+                      {hasMultipleGroups && (
+                        <div style={{ fontSize: '7.5pt', fontWeight: 'bold', color: '#7c2d12', backgroundColor: '#fff7ed', padding: '1mm 2mm', borderRadius: '3px', marginBottom: '2mm', display: 'inline-block' }}>
+                          {groupName.toUpperCase()}
+                        </div>
                       )}
-                      <div style={{ fontSize: '9pt', color: '#1c1917', fontWeight: '500' }}>{typeof ing === 'string' ? ing : ing.name}</div>
-                    </li>
+                      <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                        {groupedIngredients[groupName].map((ing, i) => (
+                          <li key={i} style={{ paddingBottom: '1mm', borderBottom: '1px solid #f5f5f4', marginBottom: '1mm' }}>
+                            {typeof ing === 'object' && ing.quantity && (
+                              <div style={{ fontSize: '6.5pt', fontWeight: 'bold', color: '#914730', marginBottom: '0.2pt' }}>{ing.quantity}</div>
+                            )}
+                            <div style={{ fontSize: '8.5pt', color: '#1c1917', fontWeight: '500' }}>{typeof ing === 'string' ? ing : ing.name}</div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
 
               {/* Main Instructions */}

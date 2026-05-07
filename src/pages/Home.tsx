@@ -4,13 +4,14 @@ import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { recipeService, Recipe } from '../services/recipeService';
 import { RecipeCard } from '../components/RecipeCard';
+import { ASSETS, getAssetUrl } from '../lib/assets';
 
 const CATEGORIES = [
-  { name: 'Café da Manhã', icon: Coffee, img: 'https://images.unsplash.com/photo-1493770348161-369560ae357d?auto=format&fit=crop&q=80&w=800' },
-  { name: 'Almoço', icon: Soup, img: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&q=80&w=800' },
-  { name: 'Jantar', icon: Pizza, img: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&q=80&w=800' },
-  { name: 'Bebidas', icon: GlassWater, img: 'https://images.unsplash.com/photo-1541529086526-db283c563270?auto=format&fit=crop&q=80&w=800' },
-  { name: 'Sobremesas', icon: Cake, img: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&q=80&w=800' },
+  { name: 'Café da Manhã', icon: Coffee, img: ASSETS.CATEGORIES.BREAKFAST },
+  { name: 'Almoço', icon: Soup, img: ASSETS.CATEGORIES.LUNCH },
+  { name: 'Jantar', icon: Pizza, img: ASSETS.CATEGORIES.DINNER },
+  { name: 'Bebidas', icon: GlassWater, img: ASSETS.CATEGORIES.DRINKS },
+  { name: 'Sobremesas', icon: Cake, img: ASSETS.CATEGORIES.DESSERTS },
 ];
 
 const MOCK_RECIPES: Recipe[] = [
@@ -24,7 +25,7 @@ const MOCK_RECIPES: Recipe[] = [
     rating: 4.9,
     reviewsCount: 45,
     difficulty: 'Fácil',
-    image: 'https://images.unsplash.com/photo-1541519227354-08fa5d50c44d?auto=format&fit=crop&q=80&w=800',
+    image: ASSETS.MOCKS.TAPIOCA,
     ownerId: 'system',
     ingredients: [],
     instructions: []
@@ -39,7 +40,7 @@ const MOCK_RECIPES: Recipe[] = [
     rating: 5.0,
     reviewsCount: 128,
     difficulty: 'Médio',
-    image: 'https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?auto=format&fit=crop&q=80&w=800',
+    image: ASSETS.MOCKS.FEIJOADA,
     ownerId: 'system',
     ingredients: [],
     instructions: []
@@ -54,7 +55,7 @@ const MOCK_RECIPES: Recipe[] = [
     rating: 4.8,
     reviewsCount: 67,
     difficulty: 'Fácil',
-    image: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&q=80&w=800',
+    image: ASSETS.MOCKS.SALMON,
     ownerId: 'system',
     ingredients: [],
     instructions: []
@@ -63,6 +64,7 @@ const MOCK_RECIPES: Recipe[] = [
 
 export default function Home() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -72,6 +74,15 @@ export default function Home() {
   const loadRecentRecipes = async () => {
     try {
       const data = await recipeService.getAllRecipes();
+      const allRecipes = data.length > 0 ? data : MOCK_RECIPES;
+      
+      // Calculate category counts
+      const counts: Record<string, number> = {};
+      CATEGORIES.forEach(cat => {
+        counts[cat.name] = allRecipes.filter(r => r.momento && r.momento.includes(cat.name)).length;
+      });
+      setCategoryCounts(counts);
+      
       if (data.length > 0) {
         setRecipes(data.slice(0, 3));
       } else {
@@ -96,7 +107,7 @@ export default function Home() {
         >
           <div className="absolute inset-0 z-0">
             <img 
-              src="https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&q=80&w=1200" 
+              src={getAssetUrl(ASSETS.HOME.HERO)} 
               alt="Featured Recipe" 
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-70 md:opacity-100"
               referrerPolicy="no-referrer"
@@ -169,14 +180,16 @@ export default function Home() {
                 whileHover={{ y: -5 }}
                 className="hidden md:block w-32 h-32 rounded-full overflow-hidden border-4 border-transparent group-hover:border-primary transition-all duration-300 p-1 bg-surface-container shadow-inner"
               >
-                <img src={cat.img} alt={cat.name} className="w-full h-full object-cover rounded-full" referrerPolicy="no-referrer" />
+                <img src={getAssetUrl(cat.img)} alt={cat.name} className="w-full h-full object-cover rounded-full" referrerPolicy="no-referrer" />
               </motion.div>
 
               <div className="flex flex-col md:items-center min-w-0">
                 <span className={`font-semibold text-on-surface group-hover:text-primary transition-colors whitespace-nowrap overflow-hidden text-ellipsis ${cat.name.length > 10 ? 'text-sm md:text-xl' : 'text-base md:text-xl'}`}>
                   {cat.name}
                 </span>
-                <span className="md:hidden text-[10px] text-on-surface-variant uppercase font-bold tracking-widest mt-0.5">Explorar</span>
+                <span className="text-[10px] text-on-surface-variant uppercase font-bold tracking-widest mt-0.5">
+                  {categoryCounts[cat.name] !== undefined ? `${categoryCounts[cat.name]} ${categoryCounts[cat.name] === 1 ? 'receita' : 'receitas'}` : 'Explorar'}
+                </span>
               </div>
 
               <div className="ml-auto md:hidden pr-2">
@@ -215,13 +228,13 @@ export default function Home() {
         <div className="px-12 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
           <div className="rounded-2xl overflow-hidden shadow-2xl">
             <img 
-              src="https://lh3.googleusercontent.com/d/1-jM6qODVnceVhAS7ULlwrUizuBl0IxNS" 
+              src={getAssetUrl(ASSETS.HOME.COMMUNITY)} 
               alt="Comunidade Alquimia do Prato" 
               className="w-full h-[400px] object-cover"
               referrerPolicy="no-referrer"
               onError={(e) => {
                 // Fallback to high-quality Unsplash if Drive fails
-                (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&q=80&w=800";
+                (e.target as HTMLImageElement).src = ASSETS.MANIFESTO.STORY_DECOR;
               }}
             />
           </div>
@@ -234,9 +247,9 @@ export default function Home() {
               <Link to="/submit" className="bg-primary text-white font-bold px-8 py-3 rounded-xl hover:shadow-lg transition-all active:scale-95 text-center shadow-xl shadow-primary/20">
                 Publicar uma Receita
               </Link>
-              <button className="border-2 border-primary text-primary font-bold px-8 py-3 rounded-xl hover:bg-primary hover:text-white transition-all active:scale-95">
+              <Link to="/manifesto" className="border-2 border-primary text-primary font-bold px-8 py-3 rounded-xl hover:bg-primary hover:text-white transition-all active:scale-95 text-center">
                 Saiba Mais
-              </button>
+              </Link>
             </div>
           </div>
         </div>

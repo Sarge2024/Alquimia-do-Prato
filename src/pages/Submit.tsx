@@ -5,6 +5,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { recipeService, Recipe, Ingredient } from '../services/recipeService';
 import { auth } from '../lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import { getAssetUrl } from '../lib/assets';
 
 export default function Submit() {
   const { id } = useParams();
@@ -31,11 +32,13 @@ export default function Submit() {
     prepTime: '',
     servings: '',
     difficulty: 'Médio',
-    ingredients: [{ name: '', quantity: '' }],
+    ingredients: [{ name: '', quantity: '', group: '' }],
     instructions: [''],
+    isClassic: false,
   });
 
   const [originalRecipe, setOriginalRecipe] = useState<Recipe | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (u) => {
@@ -54,10 +57,15 @@ export default function Submit() {
         ...location.state.scrapedData,
         // Ensure ingredients are in the correct format if they came as strings or mismatch
         ingredients: Array.isArray(location.state.scrapedData.ingredients) 
-          ? location.state.scrapedData.ingredients.map((ing: any) => 
-              typeof ing === 'string' ? { name: ing, quantity: '' } : ing
-            )
-          : [{ name: '', quantity: '' }]
+          ? location.state.scrapedData.ingredients.map((ing: any) => {
+              if (typeof ing === 'string') return { name: ing, quantity: '', group: '' };
+              return { 
+                name: ing.name || '', 
+                quantity: ing.quantity || '', 
+                group: ing.group || '' 
+              };
+            })
+          : [{ name: '', quantity: '', group: '' }]
       }));
     }
 
@@ -97,12 +105,45 @@ export default function Submit() {
             typeof ing === 'string' ? { name: ing, quantity: '' } : ing
           ),
           instructions: recipe.instructions,
+          isClassic: recipe.isClassic || false,
         });
       }
     } catch (error) {
       console.error('Error fetching recipe:', error);
     } finally {
       setFetching(false);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('A imagem deve ter no máximo 5MB');
+      return;
+    }
+
+    setUploadingImage(true);
+    const formDataUpload = new FormData();
+    formDataUpload.append('image', file);
+
+    try {
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formDataUpload,
+      });
+      const data = await response.json();
+      if (data.success) {
+        setFormData(prev => ({ ...prev, image: data.imageUrl }));
+      } else {
+        alert('Erro ao carregar imagem: ' + (data.error || 'Erro desconhecido'));
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert('Falha ao enviar a imagem para o servidor.');
+    } finally {
+      setUploadingImage(false);
     }
   };
 
@@ -125,7 +166,7 @@ export default function Submit() {
 
   const addArrayItem = (field: 'ingredients' | 'instructions') => {
     if (field === 'ingredients') {
-      setFormData(prev => ({ ...prev, ingredients: [...prev.ingredients, { name: '', quantity: '' }] }));
+      setFormData(prev => ({ ...prev, ingredients: [...prev.ingredients, { name: '', quantity: '', group: '' }] }));
     } else {
       setFormData(prev => ({ ...prev, instructions: [...prev.instructions, ''] }));
     }
@@ -227,7 +268,7 @@ export default function Submit() {
   };
 
   const MOMENTOS = ["Café da Manhã", "Brunch", "Almoço", "Lanche / Chá da Tarde", "Jantar", "Ceia", "Petiscos / Aperitivos", "Bebidas"];
-  const TIPOS_PRATO = ["Assados", "Frituras", "Grelhados", "Sopas e Caldos", "Cremes e Purés", "Massas e Risotos", "Saladas e Pratos Frios", "Cozidos / Guisados", "Padaria e Pastelaria", "Bebidas"];
+  const TIPOS_PRATO = ["Assados", "Frituras", "Grelhados", "Sopas e Caldos", "Cremes e Purés", "Massas e Risotos", "Saladas e Pratos Frios", "Cozidos / Guisados", "Padaria e Pastelaria", "Bebidas", "Doces e Sobremesas"];
   const BASES_ALIMENTO = ["Carnes", "Frutos do Mar", "Vegetais e Legumes", "Ovos e Laticínios", "Grãos e Leguminosas"];
   const ORIGENS = ["Latino-Americana", "Brasileira", "Mexicana", "Argentina", "Asiática", "Japonesa", "Chinesa", "Tailandesa", "Coreana", "Indiana", "Europeia", "Italiana", "Francesa", "Portuguesa", "Espanhola", "Árabe / Médio Oriente", "Americana"];
   const CUSTOS = ["$", "$$", "$$$", "$$$$"];
@@ -347,6 +388,21 @@ export default function Submit() {
                 ))}
               </div>
             </div>
+          </div>
+
+          {/* Receita Clássica Checkbox */}
+          <div className="flex items-center gap-3 p-4 bg-primary/5 rounded-xl border-2 border-primary/20">
+            <input 
+              type="checkbox" 
+              id="isClassic"
+              name="isClassic"
+              checked={formData.isClassic || false}
+              onChange={(e) => setFormData(prev => ({ ...prev, isClassic: e.target.checked }))}
+              className="w-5 h-5 accent-primary cursor-pointer"
+            />
+            <label htmlFor="isClassic" className="font-bold text-on-surface cursor-pointer select-none">
+              Receita Clássica <span className="text-xs font-normal block text-on-surface-variant">Esta receita possui uma história tradicional por trás dela.</span>
+            </label>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -473,47 +529,97 @@ export default function Submit() {
         {/* Media */}
         <section className="space-y-6">
           <h2 className="text-2xl font-bold text-on-surface border-b border-stone-200 pb-4">Imagem da Receita</h2>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="block font-semibold text-on-surface-variant">URL da Imagem</label>
-              <input 
-                type="url" 
-                name="image"
-                value={formData.image}
-                onChange={handleInputChange}
-                placeholder="https://exemplo.com/imagem.jpg" 
-                className="w-full p-4 rounded-xl bg-surface-container border-none focus:ring-2 focus:ring-primary outline-none" 
-              />
-            </div>
-            {formData.image && (
-              <div className="aspect-video w-full rounded-2xl overflow-hidden shadow-inner bg-stone-100 border border-stone-200">
-                <img src={formData.image} alt="Preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="block font-semibold text-on-surface-variant">Upload de Arquivo Local</label>
+                <div className="relative">
+                  <input 
+                    type="file" 
+                    id="file-upload"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    className="hidden" 
+                  />
+                  <label 
+                    htmlFor="file-upload"
+                    className={`flex items-center justify-center gap-3 p-4 border-2 border-dashed rounded-xl cursor-pointer transition-all ${uploadingImage ? 'bg-stone-50 border-stone-300' : 'border-primary/30 hover:border-primary hover:bg-primary/5'}`}
+                  >
+                    {uploadingImage ? (
+                      <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                    ) : (
+                      <Upload className="w-5 h-5 text-primary" />
+                    )}
+                    <span className="font-bold text-primary">
+                      {uploadingImage ? 'Enviando...' : 'Selecionar imagem do dispositivo'}
+                    </span>
+                  </label>
+                </div>
+                <p className="text-xs text-on-surface-variant">Arquivos suportados: JPG, PNG, WEBP. Máx 5MB.</p>
               </div>
-            )}
-            {imageOptions.length > 0 && (
-              <div className="space-y-4">
-                <label className="block font-semibold text-on-surface-variant">Outras imagens encontradas (Clique para substituir):</label>
-                <div className="grid grid-cols-3 sm:grid-cols-5 gap-4">
-                  {imageOptions.map((opt, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, image: opt }))}
-                      className={`aspect-square rounded-xl overflow-hidden border-2 transition-all ${formData.image === opt ? 'border-primary shadow-md scale-95' : 'border-transparent hover:border-stone-300'}`}
-                    >
-                      <img src={opt} alt={`Option ${idx}`} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                    </button>
-                  ))}
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-stone-200"></span>
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white px-2 text-on-surface-variant font-bold">OU</span>
                 </div>
               </div>
-            )}
-            {!formData.image && (
-              <div className="aspect-video w-full rounded-2xl border-4 border-dashed border-stone-200 flex flex-col items-center justify-center bg-surface-container-low">
-                <Upload className="w-12 h-12 text-stone-300 mb-4" />
-                <p className="text-stone-400 font-semibold">Insira uma URL de imagem acima</p>
+
+              <div className="space-y-2">
+                <label className="block font-semibold text-on-surface-variant">URL da Imagem (Web)</label>
+                <input 
+                  type="url" 
+                  name="image"
+                  value={formData.image}
+                  onChange={handleInputChange}
+                  placeholder="https://exemplo.com/imagem.jpg" 
+                  className="w-full p-4 rounded-xl bg-surface-container border-none focus:ring-2 focus:ring-primary outline-none" 
+                />
               </div>
-            )}
+            </div>
+
+            <div className="space-y-4">
+              <label className="block font-semibold text-on-surface-variant">Pré-visualização</label>
+              {formData.image ? (
+                <div className="aspect-video w-full rounded-2xl overflow-hidden shadow-md bg-stone-100 border border-stone-200 group relative">
+                  <img src={getAssetUrl(formData.image)} alt="Preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  <button 
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, image: '' }))}
+                    className="absolute top-2 right-2 p-2 bg-white/80 hover:bg-white text-red-500 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="aspect-video w-full rounded-2xl border-4 border-dashed border-stone-200 flex flex-col items-center justify-center bg-surface-container-low text-stone-400">
+                  <Upload className="w-12 h-12 mb-4 opacity-20" />
+                  <p className="font-semibold">Nenhuma imagem selecionada</p>
+                </div>
+              )}
+            </div>
           </div>
+
+          {imageOptions.length > 0 && (
+            <div className="space-y-4 pt-4">
+              <label className="block font-semibold text-on-surface-variant">Outras imagens encontradas (Clique para selecionar):</label>
+              <div className="flex overflow-x-auto gap-4 pb-2 scrollbar-thin scrollbar-thumb-stone-300">
+                {imageOptions.map((opt, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, image: opt }))}
+                    className={`flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden border-2 transition-all ${formData.image === opt ? 'border-primary ring-2 ring-primary/20' : 'border-transparent hover:border-stone-300'}`}
+                  >
+                    <img src={getAssetUrl(opt)} alt={`Option ${idx}`} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Ingredients */}
@@ -530,24 +636,34 @@ export default function Submit() {
           </div>
           <div className="space-y-4">
             {(formData.ingredients as Ingredient[]).map((ing, i) => (
-              <div key={i} className="flex flex-col md:flex-row gap-4 p-4 bg-surface-container rounded-2xl relative group">
-                <div className="flex-1 space-y-2">
+              <div key={i} className="flex flex-col md:flex-row gap-4 p-4 bg-surface-container rounded-2xl relative group items-end md:items-start">
+                <div className="flex-1 min-w-[120px] space-y-2 w-full">
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Parte / Grupo</label>
+                  <input 
+                    type="text" 
+                    value={ing.group || ''}
+                    onChange={(e) => handleIngredientChange(i, 'group', e.target.value)}
+                    placeholder="Ex: Massa, Recheio..." 
+                    className="w-full p-3 rounded-xl bg-white border border-stone-100 focus:ring-2 focus:ring-primary outline-none text-sm" 
+                  />
+                </div>
+                <div className="flex-1 min-w-[120px] space-y-2 w-full">
                   <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Quantidade</label>
                   <input 
                     type="text" 
                     value={ing.quantity}
                     onChange={(e) => handleIngredientChange(i, 'quantity', e.target.value)}
-                    placeholder="Ex: 1 xícara, 200g..." 
+                    placeholder="Ex: 1 xícara..." 
                     className="w-full p-3 rounded-xl bg-white border border-stone-100 focus:ring-2 focus:ring-primary outline-none text-sm" 
                   />
                 </div>
-                <div className="flex-[2] space-y-2">
+                <div className="flex-[2] space-y-2 w-full">
                   <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Ingrediente</label>
                   <input 
                     type="text" 
                     value={ing.name}
                     onChange={(e) => handleIngredientChange(i, 'name', e.target.value)}
-                    placeholder="Ex: Açúcar, Farinha de trigo..." 
+                    placeholder="Ex: Açúcar, Farinha..." 
                     className="w-full p-3 rounded-xl bg-white border border-stone-100 focus:ring-2 focus:ring-primary outline-none text-sm" 
                   />
                 </div>
@@ -555,7 +671,7 @@ export default function Submit() {
                   <button 
                     type="button" 
                     onClick={() => removeArrayItem(i, 'ingredients')}
-                    className="absolute -top-2 -right-2 md:static p-2 text-stone-400 hover:text-red-500 transition-colors bg-white md:bg-transparent rounded-full shadow-sm md:shadow-none"
+                    className="p-2 text-stone-400 hover:text-red-500 transition-colors bg-white md:bg-transparent rounded-full shadow-sm md:shadow-none mb-1"
                   >
                     <Trash2 className="w-5 h-5" />
                   </button>

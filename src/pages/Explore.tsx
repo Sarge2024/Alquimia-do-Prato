@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { recipeService, Recipe } from '../services/recipeService';
 
 import { RecipeCard } from '../components/RecipeCard';
+import { ASSETS, getAssetUrl } from '../lib/assets';
 
 const MOCK_RECIPES: Recipe[] = [
   {
@@ -18,7 +19,7 @@ const MOCK_RECIPES: Recipe[] = [
     rating: 4.9,
     reviewsCount: 45,
     difficulty: 'Fácil',
-    image: 'https://images.unsplash.com/photo-1541519227354-08fa5d50c44d?auto=format&fit=crop&q=80&w=800',
+    image: ASSETS.MOCKS.TAPIOCA,
     ownerId: 'system',
     ingredients: [],
     instructions: []
@@ -34,7 +35,7 @@ const MOCK_RECIPES: Recipe[] = [
     rating: 5.0,
     reviewsCount: 128,
     difficulty: 'Médio',
-    image: 'https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?auto=format&fit=crop&q=80&w=800',
+    image: ASSETS.MOCKS.FEIJOADA,
     ownerId: 'system',
     ingredients: [],
     instructions: []
@@ -50,7 +51,7 @@ const MOCK_RECIPES: Recipe[] = [
     rating: 4.8,
     reviewsCount: 67,
     difficulty: 'Fácil',
-    image: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&q=80&w=800',
+    image: ASSETS.MOCKS.SALMON,
     ownerId: 'system',
     ingredients: [],
     instructions: []
@@ -59,14 +60,14 @@ const MOCK_RECIPES: Recipe[] = [
     id: 'pudim-leite',
     title: 'Pudim de Leite Condensado',
     momento: ['Lanche / Chá da Tarde'],
-    tipo_prato: ['Assados'],
+    tipo_prato: ['Doces e Sobremesas'],
     base_alimento: ['Ovos e Laticínios'],
     origem: 'Brasileira',
     time: '1h 30min',
     rating: 4.9,
     reviewsCount: 210,
     difficulty: 'Médio',
-    image: 'https://images.unsplash.com/photo-1528975604071-b4dc52a2d18c?auto=format&fit=crop&q=80&w=800',
+    image: ASSETS.MOCKS.BRUNCH,
     ownerId: 'system',
     ingredients: [],
     instructions: []
@@ -92,6 +93,7 @@ export default function Explore() {
     const base = searchParams.get('base');
     const diet = searchParams.get('diet');
     const difficulty = searchParams.get('difficulty');
+    const classic = searchParams.get('classic');
     
     let filtered = [...recipes];
     
@@ -113,6 +115,10 @@ export default function Explore() {
 
     if (difficulty) {
       filtered = filtered.filter(r => r.difficulty === difficulty);
+    }
+
+    if (classic === 'true') {
+      filtered = filtered.filter(r => r.isClassic === true);
     }
     
     setFilteredRecipes(filtered);
@@ -234,6 +240,30 @@ export default function Explore() {
               )}
             </div>
             <div className="space-y-4">
+              {/* Classic Filter */}
+              <div className="p-4 bg-primary/5 border border-primary/20 rounded-xl">
+                <label className="flex items-center gap-3 cursor-pointer select-none">
+                  <input 
+                    type="checkbox" 
+                    className="w-5 h-5 rounded text-primary focus:ring-primary accent-primary"
+                    checked={searchParams.get('classic') === 'true'}
+                    onChange={(e) => {
+                      const newParams = new URLSearchParams(searchParams);
+                      if (e.target.checked) {
+                        newParams.set('classic', 'true');
+                      } else {
+                        newParams.delete('classic');
+                      }
+                      setSearchParams(newParams);
+                    }}
+                  />
+                  <div className="flex flex-col">
+                    <span className="font-bold text-primary text-sm">Receitas Clássicas</span>
+                    <span className="text-[10px] text-on-surface-variant font-medium">História e Tradição</span>
+                  </div>
+                </label>
+              </div>
+
               {/* Momento Filter */}
               <div className="p-4 bg-surface-container rounded-xl">
                 <button className="w-full flex items-center justify-between font-semibold">
@@ -265,7 +295,7 @@ export default function Explore() {
                   Técnica <ChevronDown className="w-4 h-4" />
                 </button>
                 <div className="mt-3 space-y-2 text-sm text-on-surface-variant">
-                  {['Assados', 'Frituras', 'Grelhados', 'Sopas e Caldos', 'Massas e Risotos', 'Bebidas'].map(tech => (
+                  {['Assados', 'Frituras', 'Grelhados', 'Sopas e Caldos', 'Massas e Risotos', 'Bebidas', 'Doces e Sobremesas'].map(tech => (
                     <label key={tech} className="flex items-center gap-2 cursor-pointer">
                       <input 
                         type="radio" 
@@ -395,7 +425,7 @@ export default function Explore() {
                           >
                             <div className="w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden flex-shrink-0 bg-stone-200">
                               {recipe.image ? (
-                                <img src={recipe.image} alt={recipe.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" referrerPolicy="no-referrer" />
+                                <img src={getAssetUrl(recipe.image)} alt={recipe.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" referrerPolicy="no-referrer" />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center text-[10px] text-stone-400 font-bold uppercase">N/A</div>
                               )}

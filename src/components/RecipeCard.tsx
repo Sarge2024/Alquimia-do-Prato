@@ -4,6 +4,8 @@ import { Clock, Star, Gauge, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Recipe } from '../services/recipeService';
 
+import { ASSETS, getAssetUrl } from '../lib/assets';
+
 interface RecipeCardProps {
   recipe: Recipe;
 }
@@ -22,11 +24,17 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
       {/* Image Section */}
       <div className="relative aspect-[4/3] overflow-hidden">
         <img
-          src={image || 'https://images.unsplash.com/photo-1495521821757-a1efb67273fb?auto=format&fit=crop&q=80&w=800'}
+          src={getAssetUrl(image || ASSETS.DEFAULT_RECIPE)}
           alt={title}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
         />
         <div className="absolute top-4 left-4 flex flex-wrap gap-2">
+          {recipe.isClassic && (
+            <span className="px-3 py-1 bg-primary text-white text-[10px] font-bold rounded-full shadow-sm uppercase tracking-wider flex items-center gap-1">
+              <Star className="w-2.5 h-2.5 fill-white" />
+              Clássica
+            </span>
+          )}
           {momento && momento.length > 0 && (
             <span className="px-3 py-1 bg-white/90 backdrop-blur-md text-primary text-[10px] font-bold rounded-full shadow-sm uppercase tracking-wider">
               {momento[0]}

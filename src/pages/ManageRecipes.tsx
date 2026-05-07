@@ -3,8 +3,8 @@ import { Edit3, Trash2, ChevronRight, Loader2, Plus, Clock, Star, AlertTriangle 
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { recipeService, Recipe } from '../services/recipeService';
-import { auth } from '../lib/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import { useAuth } from '../context/AuthContext';
+import { getAssetUrl } from '../lib/assets';
 
 export default function ManageRecipes() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -12,23 +12,16 @@ export default function ManageRecipes() {
   const [seeding, setSeeding] = useState(false);
   const [scraping, setScraping] = useState(false);
   const [scrapeUrl, setScrapeUrl] = useState('');
-  const [user, setUser] = useState(auth.currentUser);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
-      setUser(u);
-      if (!u) {
-        navigate('/');
-      } else {
-        fetchUserRecipes(u.uid);
-      }
-    });
-
-    return () => unsubscribe();
-  }, [navigate]);
+    if (user) {
+      fetchUserRecipes(user.uid);
+    }
+  }, [user]);
 
   const fetchUserRecipes = async (userId: string) => {
     try {
@@ -68,8 +61,6 @@ export default function ManageRecipes() {
       setScraping(false);
     }
   };
-
-  const isAdmin = user?.email === 'sagacitas.sistemas@gmail.com';
 
   const handleDelete = async (id: string) => {
     if (!id) return;
@@ -188,7 +179,7 @@ export default function ManageRecipes() {
             >
               <div className="w-full md:w-32 h-32 rounded-xl overflow-hidden bg-stone-200 flex-shrink-0">
                 {recipe.image ? (
-                  <img src={recipe.image} alt={recipe.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  <img src={getAssetUrl(recipe.image)} alt={recipe.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-stone-400 font-bold uppercase text-xs">
                     Sem Foto

@@ -21,7 +21,7 @@ export const geminiService = {
       REGRAS ESTRITAS DE RETORNO (JSON):
       - title, description.
       - momento (string[]): USE APENAS: 'Café da Manhã', 'Brunch', 'Almoço', 'Lanche / Chá da Tarde', 'Jantar', 'Ceia', 'Petiscos / Aperitivos', 'Bebidas'. (Pode ser mais de um).
-      - tipo_prato (string[]): USE APENAS: 'Assados', 'Frituras', 'Grelhados', 'Sopas e Caldos', 'Cremes e Purés', 'Massas e Risotos', 'Saladas e Pratos Frios', 'Cozidos / Guisados', 'Padaria e Pastelaria', 'Bebidas'.
+      - tipo_prato (string[]): USE APENAS: 'Assados', 'Frituras', 'Grelhados', 'Sopas e Caldos', 'Cremes e Purés', 'Massas e Risotos', 'Saladas e Pratos Frios', 'Cozidos / Guisados', 'Padaria e Pastelaria', 'Bebidas', 'Doces e Sobremesas'.
       - base_alimento (string[]): USE APENAS: 'Carnes', 'Frutos do Mar', 'Vegetais e Legumes', 'Ovos e Laticínios', 'Grãos e Leguminosas'.
       - origem (string): USE PREFERENCIALMENTE: 'Latino-Americana', 'Brasileira', 'Mexicana', 'Argentina', 'Asiática', 'Japonesa', 'Chinesa', 'Tailandesa', 'Coreana', 'Indiana', 'Europeia', 'Italiana', 'Francesa', 'Portuguesa', 'Espanhola', 'Árabe / Médio Oriente', 'Americana'.
       - custo_estimado (string): USE: '$', '$$', '$$$', '$$$$'.
@@ -29,7 +29,8 @@ export const geminiService = {
       - prepTime (string): TEMPO DE PREPARAÇÃO (ex: '15 min').
       - dietType (string): TIPO DE DIETA (USE EXATAMENTE UMA DESTAS: 'Convencional', 'Vegana', 'Vegetariana', 'Low Carb', 'Keto', 'Sem Glúten', 'Fit'). Se não houver restrição clara, use 'Convencional'.
       - difficulty (Fácil, Médio, Difícil), servings.
-      - ingredients (objeto[] com name e quantity). Quantidade nunca vazia (use "a gosto" se necessário).
+      - isClassic (boolean): Determine se esta é uma receita CLÁSSICA ou TRADICIONAL. Receitas clássicas são aquelas amplamente conhecidas, com origem histórica clara, herança cultural ou pratos icônicos (ex: Feijoada, Carbonara, Ratatouille). Se o texto descrever uma história de família ou herança, também marque como true.
+      - ingredients (objeto[] com name, quantity e group). O campo 'group' deve ser usado para separar partes da receita (ex: 'Massa', 'Recheio', 'Cobertura', 'Calda'). Se a receita não tiver partes distintas, deixe 'group' como null ou vazio. Quantidade nunca vazia (use "a gosto" se necessário).
       - instructions (string[]).
       - image, imageOptions (string[]).
     `;
@@ -59,8 +60,30 @@ export const geminiService = {
 
       const response = await (ai.models as any).generateContent(modelParams);
       const text = response.text || "";
-      const jsonStr = text.replace(/```json/g, "").replace(/```/g, "").trim();
-      let result = JSON.parse(jsonStr);
+      
+      // Robust JSON extraction: Find the first { and the last }
+      let jsonStr = text;
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        jsonStr = jsonMatch[0];
+      } else {
+        // Fallback to simple clean if block search fails
+        jsonStr = text.replace(/```json/g, "").replace(/```/g, "").trim();
+      }
+
+      let result: any;
+      try {
+        result = JSON.parse(jsonStr);
+      } catch (parseError) {
+        console.error("Initial JSON parse failure, attempting to clean response:", text);
+        // Deep search for JSON if first match failed (sometimes Gemini wraps JSON in markdown blocks)
+        const cleanerMatch = text.match(/\{[\s\S]*\}/);
+        if (cleanerMatch) {
+           result = JSON.parse(cleanerMatch[0]);
+        } else {
+           throw parseError;
+        }
+      }
 
       // Sanitize fields to ensure they are the correct types for Firestore
       result.title = String(result.title || "").substring(0, 300);
@@ -72,7 +95,7 @@ export const geminiService = {
         : [];
       if (result.momento.length === 0) result.momento = ["Almoço"];
 
-      const ALL_TIPOS = ["Assados", "Frituras", "Grelhados", "Sopas e Caldos", "Cremes e Purés", "Massas e Risotos", "Saladas e Pratos Frios", "Cozidos / Guisados", "Padaria e Pastelaria", "Bebidas"];
+      const ALL_TIPOS = ["Assados", "Frituras", "Grelhados", "Sopas e Caldos", "Cremes e Purés", "Massas e Risotos", "Saladas e Pratos Frios", "Cozidos / Guisados", "Padaria e Pastelaria", "Bebidas", "Doces e Sobremesas"];
       result.tipo_prato = Array.isArray(result.tipo_prato)
         ? result.tipo_prato.filter((t: string) => ALL_TIPOS.includes(t))
         : [];
@@ -82,7 +105,15 @@ export const geminiService = {
       result.base_alimento = Array.isArray(result.base_alimento)
         ? result.base_alimento.filter((b: string) => ALL_BASES.includes(b))
         : [];
-      if (result.base_alimento.length === 0) result.base_alimento = ["Vegetais e Legumes"];
+      
+      // For drinks, base_alimento might be empty, so we add a generic or use specific logic
+      if (result.base_alimento.length === 0) {
+        if (result.momento?.includes('Bebidas') || result.tipo_prato?.includes('Bebidas')) {
+          result.base_alimento = ["Vegetais e Legumes"]; // Default for fruit/botanical drinks
+        } else {
+          result.base_alimento = ["Vegetais e Legumes"];
+        }
+      }
 
       result.origem = String(result.origem || "Brasileira");
       result.custo_estimado = ["$", "$$", "$$$", "$$$$"].includes(result.custo_estimado) ? result.custo_estimado : "$$";
@@ -99,11 +130,14 @@ export const geminiService = {
       if (!['Fácil', 'Médio', 'Difícil'].includes(result.difficulty)) {
         result.difficulty = "Médio";
       }
+
+      result.isClassic = Boolean(result.isClassic);
       
       if (Array.isArray(result.ingredients)) {
         result.ingredients = result.ingredients.map((ing: any) => ({
           name: String(ing.name || ing || "").substring(0, 200),
-          quantity: String(ing.quantity || "").substring(0, 100)
+          quantity: String(ing.quantity || "").substring(0, 100),
+          group: ing.group ? String(ing.group).substring(0, 100) : null
         }));
       } else {
         result.ingredients = [];
@@ -133,6 +167,7 @@ export const geminiService = {
       }
 
       result.imageOptions = finalOptions.slice(0, 10);
+      result.image = result.image || (result.imageOptions.length > 0 ? result.imageOptions[0] : "");
 
       // Fallback Search: If fewer than 2 image options are found, try searching for more using Gemini search grounding
       if (result.imageOptions.length < 2 && result.title) {
@@ -162,7 +197,28 @@ export const geminiService = {
         }
       }
 
-      return result;
+      // Ensure no fields are undefined before returning
+      const finalResult: Partial<Recipe> = {
+        title: result.title || "Receita sem título",
+        description: result.description || "",
+        momento: result.momento || ["Bebidas"],
+        tipo_prato: result.tipo_prato || ["Bebidas"],
+        base_alimento: result.base_alimento || ["Vegetais e Legumes"],
+        origem: result.origem || "Brasileira",
+        custo_estimado: result.custo_estimado || "$$",
+        dietType: result.dietType || "Convencional",
+        time: result.time || "",
+        prepTime: result.prepTime || "",
+        servings: result.servings || "",
+        difficulty: result.difficulty || "Médio",
+        isClassic: !!result.isClassic,
+        ingredients: result.ingredients || [],
+        instructions: result.instructions || [],
+        image: result.image || "",
+        imageOptions: result.imageOptions || []
+      };
+
+      return finalResult;
     } catch (error) {
       console.error("Gemini extraction error:", error);
       throw new Error("Falha ao extrair dados da receita via AI.");

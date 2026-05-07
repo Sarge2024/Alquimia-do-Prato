@@ -12,12 +12,16 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
     function isValidId(id) {
-      return id is string && id.size() <= 128;
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
     function incoming() {
@@ -29,15 +33,19 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isSignedIn() && request.auth.token.email == 'sagacitas.sistemas@gmail.com';
+      return isVerified() && request.auth.token.email == 'sagacitas.sistemas@gmail.com';
     }
 
     // --- Recipe Validation ---
     function isValidRecipe(data) {
-      return (data.get('title', 'valid') is string && data.get('title', 'valid').size() <= 1000)
-        && (data.get('difficulty', 'Médio') in ['Fácil', 'Médio', 'Difícil'])
-        && (data.get('custo_estimado', '$$') in ['$', '$$', '$$$', '$$$$'])
-        && (data.get('dietType', 'Convencional') in ['Convencional', 'Vegana', 'Vegetariana', 'Low Carb', 'Keto', 'Sem Glúten', 'Fit']);
+      return (data.title is string && data.title.size() <= 300)
+        && (data.difficulty in ['Fácil', 'Médio', 'Difícil'])
+        && (data.custo_estimado in ['$', '$$', '$$$', '$$$$'])
+        && (data.dietType in ['Convencional', 'Vegana', 'Vegetariana', 'Low Carb', 'Keto', 'Sem Glúten', 'Fit'])
+        && (data.ingredients is list && data.ingredients.size() <= 100)
+        && (data.instructions is list && data.instructions.size() <= 50)
+        && (data.rating is number && data.rating >= 0 && data.rating <= 5)
+        && (data.reviewsCount is number && data.reviewsCount >= 0);
     }
 
     // --- Collections ---
@@ -48,21 +56,27 @@ service cloud.firestore {
     match /recipes/{recipeId} {
       allow read: if true; // Publicly readable
       
-      allow create: if isSignedIn() 
+      allow create: if isVerified() 
         && isValidId(recipeId) 
-        && incoming().keys().hasAll(['title', 'momento', 'tipo_prato', 'base_alimento', 'ingredients', 'instructions', 'ownerId', 'createdAt', 'updatedAt', 'rating', 'reviewsCount'])
-        && isValidRecipe(incoming())
         && incoming().ownerId == request.auth.uid
         && incoming().createdAt == request.time
-        && incoming().updatedAt == request.time;
+        && incoming().updatedAt == request.time
+        && incoming().rating == 4.5 // Baseline
+        && incoming().reviewsCount == 0
+        && isValidRecipe(incoming());
 
-      allow update: if (isOwner(existing().ownerId) || isAdmin())
-        && isValidRecipe(incoming())
-        && (incoming().get('ownerId', existing().ownerId) == existing().ownerId || isAdmin())
-        && incoming().get('createdAt', existing().createdAt) == existing().createdAt
-        && (incoming().updatedAt == request.time || isAdmin());
+      allow update: if (isVerified() && isValidRecipe(incoming())) && (
+        isAdmin() || (
+          isOwner(existing().ownerId) && 
+          // Action: Edit content - Prevents tampering with ownership, rating, or timestamps
+          incoming().diff(existing()).affectedKeys().hasOnly(['title', 'description', 'momento', 'tipo_prato', 'base_alimento', 'origem', 'ingredients', 'instructions', 'image', 'imageOptions', 'time', 'prepTime', 'servings', 'difficulty', 'dietType', 'updatedAt']) &&
+          incoming().ownerId == existing().ownerId &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().updatedAt == request.time
+        )
+      );
 
-      allow delete: if isOwner(existing().ownerId) || isAdmin();
+      allow delete: if isAdmin() || (isVerified() && isOwner(existing().ownerId));
     }
   }
 }
